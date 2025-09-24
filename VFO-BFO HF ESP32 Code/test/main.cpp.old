@@ -1,0 +1,806 @@
+///////////////////////////////////////////////////////////////////////////////////
+//    ESP32-S3 + si5351 VFO(With BFO) Ver1.01
+//          (Based on 'JAN2KD 2016.10.19 Multi Band DDS VFO Ver3.1')  
+//
+//                                                        2017/9/16
+//                                                        JA2GQP    
+///////////////////////////////////////////////////////////////////////////////////
+
+//---------- Library include ----------
+
+#include <Arduino.h>
+#include <si5351.h>                     // Sostituita la libreria si5351a2.h
+#include <SPI.h>
+#include <EEPROM.h>
+#include <Rotary.h>
+#include <TFT_eSPI.h>
+
+//----------   Encorder setting  ---------------
+
+#define ENC_A     34                    // Rotary encoder A - DA MODIFICARE CON PIN ESP32-S3
+#define ENC_B     35                    // Rotary encoder B - DA MODIFICARE CON PIN ESP32-S3
+
+Rotary r = Rotary(ENC_A, ENC_B);
+
+//----------   TFT setting  -------------------
+
+TFT_eSPI tft = TFT_eSPI();
+
+//----------   CW Tone  -------------------
+
+#define   CW_TONE     700                // 700Hz
+
+//----------   I/O Assign  -------------------
+
+#define   MODE_OUT1    15                // DA MODIFICARE CON PIN ESP32-S3
+#define   MODE_OUT2    16                // DA MODIFICARE CON PIN ESP32-S3
+#define   BAND_OUT1    17                // DA MODIFICARE CON PIN ESP32-S3
+#define   BAND_OUT2    18                // DA MODIFICARE CON PIN ESP32-S3
+#define   BAND_OUT3    19                // DA MODIFICARE CON PIN ESP32-S3
+
+#define   SW_BAND      20                // DA MODIFICARE CON PIN ESP32-S3
+#define   SW_MODE      21                // DA MODIFICARE CON PIN ESP32-S3
+#define   SW_STEP      22                // DA MODIFICARE CON PIN ESP32-S3
+#define   SW_RIT       23                // DA MODIFICARE CON PIN ESP32-S3
+#define   SW_TX        24                // DA MODIFICARE CON PIN ESP32-S3
+#define   METER        25                // DA MODIFICARE CON PIN ESP32-S3
+
+#define   EEP_BAND     0x00               // EEPROM BAND Address
+#define   EEP_INIT     0x0e               //        INIT end Address
+
+//---------- Variable setting ----------
+
+long      romf[4];                        // EEPROM freq copy buffer
+long      freq    = 7100000;
+long      freqmax = 7200000;
+long      freqmin = 7000000;
+long      freqold = 0;
+long      freqrit = 0;
+
+String    freqt = String(freq);             // Frequency text
+
+long      ifshift = 0;
+long      ifshiftb;
+long      romb[5];                        // EEPROM bfo copy buffer
+long      vfofreq = 0;
+long      vfofreqb;              
+
+char f100m, f10m, fmega, f100k, f10k, f1k, f100, f10, f1;
+
+int       rit        = 0;
+int       fstep      = 100;
+uint16_t  steprom    = 1;
+uint16_t  fmode      = 3;
+uint16_t  fmodeb     = 3;
+int       fmodeold   = 1;
+int       flagrit    = 0;
+int       fritold    = 0;
+int       flagmode   = 0;
+int       meterval1  = 0;
+int       tmeterval  = 0;
+int       romadd     = 0;
+int       rombadd    = 0;
+int       analogdata = 0;
+uint16_t  band       = 0;                   // 3.5MHz
+int       bandmax    = 6;                   // 6band
+
+uint16_t  Status;
+uint16_t  Data;          
+
+unsigned long eep_freq[4];
+int       eep_romadd;
+int       eep_fstep;
+int       eep_fmode;
+unsigned long eep_bfo[6];
+int       eep_rombadd;
+
+int_fast32_t timepassed;                    // int to hold the arduino millis since startup
+int       flg_frqwt = 0;                    // Frequency data Write Flag(EEPROM)
+int       flg_bfowt = 0;                    // BFO Write Flag(EEPROM)
+int       flg_bfochg = 0;                   // BFO Write Flag(EEPROM)
+
+//---------- SI5351 object ----------
+Si5351 si5351;
+//---------- Preferences object ----------
+Preferences preferences;
+
+// Colori definiti per TFT_eSPI
+#define TFT_YELLOW  0xFFE0
+#define TFT_CYAN    0x07FF
+#define TFT_MAGENTA 0xF81F
+#define TFT_ORANGE  0xFDA0
+#define TFT_GREEN   0x07E0
+#define TFT_RED     0xF800
+#define TFT_BLUE    0x001F
+#define TFT_WHITE   0xFFFF
+#define TFT_BLACK   0x0000
+#define TFT_GRAY    0x8410
+
+// Prototipi di funzione
+void band2eep();
+void band2write();
+void PLL_write();
+void Vfo_out(long frequency);
+void Bfo_out(long frequency);
+void meter();
+void txset();
+void setstep();
+void steplcd();
+void modeset();
+void Fnc_prefINIT();
+void screen01();
+long Fnc_prefRD(const char* key);
+void modesw();
+void setrit();
+void ritlcd();
+void freqlcd();
+void bandcall();
+void bandwrite();
+void Fnc_prefWT(const char* key, long value);
+void banddataout();
+void chlcd();
+void IRAM_ATTR updateEncoder();
+int readEncoder();
+
+//----------  Initialization  Program  ----------------------
+
+void setup() {
+  timepassed = millis();
+// Inizializzazione Preferences
+  preferences.begin("vfo_config", false);
+  // Inizializzazione I2C per ESP32-S3
+  Wire.begin(21, 22);  // SDA, SCL - DA MODIFICARE CON PIN ESP32-S3
+
+  // Configurazione encoder rotativo nativa per ESP32
+  pinMode(ENC_A, INPUT);
+  pinMode(ENC_B, INPUT);
+
+// Lettura dello stato iniziale dell'encoder
+  lastEncoded = (digitalRead(ENC_B) << 1) | digitalRead(ENC_A);
+
+  // Configurazione interrupt per encoder
+  attachInterrupt(digitalPinToInterrupt(ENC_A), updateEncoder, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC_B), updateEncoder, CHANGE);
+
+  delay(100);
+  tft.init();
+  tft.setRotation(1);
+  tft.fillScreen(TFT_BLACK);
+
+  pinMode(SW_BAND, INPUT_PULLUP);
+  pinMode(SW_MODE, INPUT_PULLUP);
+  pinMode(SW_STEP, INPUT_PULLUP);
+  pinMode(SW_RIT, INPUT_PULLUP);
+  pinMode(SW_TX, INPUT_PULLUP);
+  pinMode(ENC_A, INPUT);
+  pinMode(ENC_B, INPUT);
+
+  pinMode(BAND_OUT1, OUTPUT);
+  pinMode(BAND_OUT2, OUTPUT);
+  pinMode(BAND_OUT3, OUTPUT);
+  pinMode(SW_TX, INPUT_PULLUP);
+  pinMode(MODE_OUT1, OUTPUT);
+  pinMode(MODE_OUT2, OUTPUT);
+
+  // Inizializzazione SI5351
+  si5351.init(SI5351_CRYSTAL_LOAD_8PF, 0, 0);
+  //si5351.set_correction(0);  // Adjust this value based on your crystal accuracy
+  si5351.set_pll(SI5351_PLL_FIXED, SI5351_PLLA);
+  si5351.drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);  // VFO output
+  si5351.drive_strength(SI5351_CLK1, SI5351_DRIVE_8MA);  // BFO output
+  si5351.output_enable(SI5351_CLK0, 1);
+  si5351.output_enable(SI5351_CLK1, 1);
+
+  Fnc_eepINIT();
+  delay(100);
+  band2eep();
+  delay(100);
+
+   band = preferences.getUInt(EEP_BAND, 1);
+  char bandKey[20];
+  sprintf(bandKey, "band%d_freq", band);
+  romf[0] = Fnc_prefRD(bandKey);
+  sprintf(bandKey, "band%d_min", band);
+  romf[1] = Fnc_prefRD(bandKey);
+  sprintf(bandKey, "band%d_max", band);
+  romf[2] = Fnc_prefRD(bandKey);
+  sprintf(bandKey, "band%d_mode", band);
+  fmode = preferences.getUInt(bandKey, 0);
+  sprintf(bandKey, "band%d_step", band);
+  steprom = preferences.getUInt(bandKey, 2);
+
+  for (int i = 0; i < 4; i++) {
+    char bfoKey[20];
+    sprintf(bfoKey, "bfo%d", i);
+    romb[i] = Fnc_prefRD(bfoKey);
+    eep_bfo[i] = romb[i];
+  }
+
+  if (steprom == 1) { fstep = 1; }
+  if (steprom == 2) { fstep = 10; }
+  if (steprom == 3) { fstep = 100; }
+  banddataout();
+  screen01();
+  chlcd();
+
+  modeset();
+  steplcd();
+  freqt = String(freq);
+  freqlcd();
+}
+
+//----------  Main program  ---------------------------------
+
+void loop() {
+// Lettura encoder
+  int encoderChange = readEncoder();
+  if (encoderChange != 0) {
+    if (flagrit == 1) {
+      freqrit += encoderChange * fstep;
+      if (freqrit >= 10000) freqrit = 10000;
+      if (freqrit <= -10000) freqrit = -10000;
+    } else {
+      freq += encoderChange * fstep;
+      if ((flg_bfochg == 0) && (freq >= freqmax)) freq = freqmax;
+      if ((flg_bfochg == 0) && (freq <= freqmin)) freq = freqmin;
+    }
+  }
+
+// Lettura pulsanti
+  if (digitalRead(SW_STEP) == LOW)
+    setstep();
+  else if (digitalRead(SW_MODE) == LOW)
+    modesw();
+  else if (digitalRead(SW_RIT) == LOW)
+    setrit();
+  else if (digitalRead(SW_BAND) == LOW)
+    bandcall();
+
+  if (digitalRead(SW_TX) == LOW)
+    txset();
+
+  if (flagrit == 1) {
+    if (freqrit == fritold) {
+      meter();
+    }
+    if (freqrit != fritold) {
+      PLL_write();
+      ritlcd();
+      fritold = freqrit;
+    }
+  } else {
+    if (freq == freqold) {
+      meter();
+    }
+    PLL_write();
+    freqt = String(freq);
+    freqlcd();
+    freqold = freq;
+  }
+
+  if ((flg_frqwt == 1) && (flg_bfochg == 0)) {
+    if (timepassed + 1000 < millis()) {
+      bandwrite();
+      flg_frqwt = 0;
+    }
+  }
+}
+
+//----------  EEPROM Data initialization  ---------------
+void IRAM_ATTR updateEncoder() {
+  int MSB = digitalRead(ENC_A);
+  int LSB = digitalRead(ENC_B);
+
+  int encoded = (MSB << 1) | LSB;
+  int sum = (lastEncoded << 2) | encoded;
+
+  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {
+    encoderPos++;
+  }
+  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {
+    encoderPos--;
+  }
+
+  lastEncoded = encoded;
+}
+
+int readEncoder() {
+  static int lastPos = 0;
+  int change = 0;
+  
+  noInterrupts();
+  if (encoderPos != lastPos) {
+    change = encoderPos - lastPos;
+    lastPos = encoderPos;
+  }
+  interrupts();
+  
+  return change;
+}
+
+//----------  Preferences Data initialization  ---------------
+
+void band2eep() {
+  int initFlag = preferences.getUInt(EEP_INIT, 0);
+  if (initFlag != 73) {
+    preferences.putUInt(EEP_BAND, 1);
+
+    // Band 1: 3.5MHz
+    Fnc_prefWT("band1_freq", 3500000);
+    Fnc_prefWT("band1_min", 3500000);
+    Fnc_prefWT("band1_max", 3800000);
+    preferences.putUInt("band1_mode", 0);
+    preferences.putUInt("band1_step", 2);
+
+    // Band 2: 7MHz
+    Fnc_prefWT("band2_freq", 7000000);
+    Fnc_prefWT("band2_min", 7000000);
+    Fnc_prefWT("band2_max", 7200000);
+    preferences.putUInt("band2_mode", 0);
+    preferences.putUInt("band2_step", 2);
+
+    // Band 3: 10MHz
+    Fnc_prefWT("band3_freq", 10100000);
+    Fnc_prefWT("band3_min", 10100000);
+    Fnc_prefWT("band3_max", 10150000);
+    preferences.putUInt("band3_mode", 2);
+    preferences.putUInt("band3_step", 1);
+
+    // Band 4: 14MHz
+    Fnc_prefWT("band4_freq", 14000000);
+    Fnc_prefWT("band4_min", 14000000);
+    Fnc_prefWT("band4_max", 14350000);
+    preferences.putUInt("band4_mode", 1);
+    preferences.putUInt("band4_step", 2);
+
+    // Band 5: 21MHz
+    Fnc_prefWT("band5_freq", 21000000);
+    Fnc_prefWT("band5_min", 21000000);
+    Fnc_prefWT("band5_max", 21450000);
+    preferences.putUInt("band5_mode", 1);
+    preferences.putUInt("band5_step", 2);
+
+    // Band 6: 28MHz
+    Fnc_prefWT("band6_freq", 28000000);
+    Fnc_prefWT("band6_min", 28000000);
+    Fnc_prefWT("band6_max", 29700000);
+    preferences.putUInt("band6_mode", 1);
+    preferences.putUInt("band6_step", 2);
+
+    // BFO values
+    Fnc_prefWT("bfo0", 7999600);
+    Fnc_prefWT("bfo1", 8002600);
+    Fnc_prefWT("bfo2", 8000400);
+    Fnc_prefWT("bfo3", 8001100);
+
+    preferences.putUInt(EEP_INIT, 73);
+  }
+}
+
+//----------  Function Band Write to Preferences  ---------------
+
+void band2write() {
+  char key[20];
+  sprintf(key, "band%d_freq", eep_romadd);
+  Fnc_prefWT(key, eep_freq[0]);
+  sprintf(key, "band%d_min", eep_romadd);
+  Fnc_prefWT(key, eep_freq[1]);
+  sprintf(key, "band%d_max", eep_romadd);
+  Fnc_prefWT(key, eep_freq[2]);
+  sprintf(key, "band%d_mode", eep_romadd);
+  preferences.putUInt(key, eep_fmode);
+  sprintf(key, "band%d_step", eep_romadd);
+  preferences.putUInt(key, eep_fstep);
+}
+
+//---------- PLL write ---------------------------
+
+void PLL_write() {
+  if (flg_bfochg == 0) {
+    if (flagrit == 0)
+      vfofreq = freq + ifshift;
+    else
+      vfofreq = freq + ifshift + freqrit;
+
+    Vfo_out(vfofreq);
+    Bfo_out(ifshift);
+  } else {
+    ifshift = freq;
+    Bfo_out(ifshift);
+    freq = ifshift;
+  }
+}
+
+//----------  VFO out  ---------------
+
+void Vfo_out(long frequency) {
+  if (vfofreq != vfofreqb) {
+    si5351.set_freq(frequency * 100ULL, SI5351_CLK0);  // Convert to Hz
+    flg_frqwt = 1;
+    timepassed = millis();
+    vfofreqb = vfofreq;
+  }
+}
+
+//----------  BFO out  ---------------
+
+void Bfo_out(long frequency) {
+  if (ifshift != ifshiftb) {
+    si5351.set_freq(frequency * 100ULL, SI5351_CLK1);  // Convert to Hz
+    flg_bfowt = 1;
+    ifshiftb = ifshift;
+  }
+}
+
+//---------- meter --------------------------
+
+void meter() {
+  meterval1 = analogRead(METER);
+  meterval1 = meterval1 / 200;
+  if (meterval1 > 15) { meterval1 = 15; }
+  
+  tft.setTextColor(TFT_BLACK, TFT_BLACK);
+  tft.drawString("----------------", 40, 180, 2);
+  
+  tft.setTextColor(TFT_CYAN, TFT_BLACK);
+  for (int i = 1; i <= meterval1; i++) {
+    if (i <= 9) {
+      tft.setTextColor(TFT_CYAN, TFT_BLACK);
+    } else {
+      tft.setTextColor(TFT_RED, TFT_BLACK);
+    }
+    tft.drawString("-", 40 + (i - 1) * 8, 180, 2);
+  }
+}
+
+//---------- Encoder Interrupt -----------------------
+
+void IRAM_ATTR Rotaly_enc() {
+  if (flagrit == 1) {
+    unsigned char result = r.process();
+    if (result) {
+      if (result == DIR_CW) {
+        freqrit = freqrit + fstep;
+        if (freqrit >= 10000) {
+          freqrit = 10000;
+        }
+      } else {
+        freqrit = freqrit - fstep;
+        if (freqrit <= -10000) {
+          freqrit = -10000;
+        }
+      }
+    }
+  } else {
+    unsigned char result = r.process();
+    if (result) {
+      if (result == DIR_CW) {
+        freq = freq + fstep;
+        if ((flg_bfochg == 0) && (freq >= freqmax)) { freq = freqmax; }
+      } else {
+        freq = freq - fstep;
+        if ((flg_bfochg == 0) && (freq <= freqmin)) { freq = freqmin; }
+      }
+    }
+  }
+}
+
+//------------ On Air -----------------------------
+
+void txset() {
+  if (fmode == 2)
+    Vfo_out(vfofreq + CW_TONE);
+  else
+    Vfo_out(vfofreq);
+
+  tft.setTextColor(TFT_RED, TFT_BLACK);
+  tft.drawString("ON AIR", 110, 120, 2);
+  
+  while (digitalRead(SW_TX) == LOW) {
+    meter();
+  }
+
+  tft.fillRect(100, 120, 60, 20, TFT_BLACK);
+}
+
+//------------- Mode set(LSB-USB-CW-AM) ------------
+
+void modeset() {
+  tft.fillRect(5, 60, 140, 60, TFT_BLACK);
+  
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.drawString("LSB", 12, 65, 2);
+  tft.drawString("USB", 82, 65, 2);
+  tft.drawString("C W", 12, 95, 2);
+  tft.drawString("A M", 82, 95, 2);
+
+  switch (fmode) {
+    case 0:
+      ifshift = eep_bfo[0];
+      tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+      tft.drawString("LSB", 12, 65, 2);
+      digitalWrite(MODE_OUT1, LOW);
+      digitalWrite(MODE_OUT2, LOW);
+      break;
+    case 1:
+      ifshift = eep_bfo[1];
+      tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+      tft.drawString("USB", 82, 65, 2);
+      digitalWrite(MODE_OUT1, HIGH);
+      digitalWrite(MODE_OUT2, LOW);
+      break;
+    case 2:
+      ifshift = eep_bfo[2];
+      tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+      tft.drawString("C W", 12, 95, 2);
+      digitalWrite(MODE_OUT1, LOW);
+      digitalWrite(MODE_OUT2, HIGH);
+      break;
+    case 3:
+      ifshift = eep_bfo[3];
+      tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+      tft.drawString("A M", 82, 95, 2);
+      digitalWrite(MODE_OUT1, HIGH);
+      digitalWrite(MODE_OUT2, HIGH);
+      break;
+    default:
+      ifshift = eep_bfo[0];
+      tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+      tft.drawString("LSB", 12, 65, 2);
+      digitalWrite(MODE_OUT1, LOW);
+      digitalWrite(MODE_OUT2, LOW);
+      fmode = 0;
+      break;
+  }
+}
+
+//------------- Mode set SW ------------
+
+void modesw() {
+  int cnt = 0;
+
+  if (flg_bfochg == 0) {
+    while (digitalRead(SW_MODE) == LOW) {
+      delay(100);
+      cnt++;
+      if (10 <= cnt) {
+        romadd = 0x010 + (band * 0x10);
+        romf[0] = Fnc_eepRD(romadd);
+        freq = Fnc_eepRD(0x090 + (fmode * 4));
+        freqt = String(freq);
+        freqlcd();
+        tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+        tft.drawString("BFO ADJ", 110, 120, 2);
+        fmodeb = fmode;
+        flg_bfochg = 1;
+        break;
+      }
+    }
+  } else {
+    while (digitalRead(SW_MODE) == LOW) {
+      delay(100);
+      cnt++;
+      if (10 <= cnt) {
+        ifshift = freq;
+        Fnc_eepWT(ifshift, 0x090 + (fmode * 4));
+        eep_bfo[fmode] = ifshift;
+        freq = romf[0];
+        freqt = String(freq);
+        freqlcd();
+        tft.fillRect(100, 120, 80, 20, TFT_BLACK);
+        flg_bfochg = 0;
+        fmode--;
+        break;
+      }
+    }
+  }
+  if (flg_bfochg == 0)
+    fmode++;
+  modeset();
+  PLL_write();
+  while (digitalRead(SW_MODE) == LOW);
+}
+
+//------------ Rit SET ------------------------------
+
+void setrit() {
+  if (flagrit == 0) {
+    flagrit = 1;
+    tft.setTextColor(TFT_RED, TFT_BLACK);
+    tft.drawString("RIT", 190, 95, 2);
+    ritlcd();
+  } else {
+    flagrit = 0;
+    vfofreq = freq + ifshift;
+    Vfo_out(vfofreq);
+    freqt = String(freq);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawString("RIT", 190, 95, 2);
+    tft.fillRect(222, 92, 91, 21, TFT_BLACK);
+    freqrit = 0;
+  }
+  while (digitalRead(SW_RIT) == LOW);
+}
+
+//----------- Rit screen ----------------------
+
+void ritlcd() {
+  tft.fillRect(222, 92, 91, 21, TFT_BLACK);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.drawNumber(freqrit, 230, 92, 2);
+}
+
+//-------------- encorder frequency step set -----------
+
+void setstep() {
+  if (fstep == 100) {
+    fstep = 1;
+  } else {
+    fstep = fstep * 10;
+  }
+  steplcd();
+  while (digitalRead(SW_STEP) == LOW);
+}
+
+//------------- Step Screen ---------------------------
+
+void steplcd() {
+  tft.fillRect(221, 61, 93, 23, TFT_BLACK);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  
+  if (fstep == 1) { tft.drawString("     1Hz", 220, 61, 2); }
+  if (fstep == 10) { tft.drawString("    10Hz", 220, 61, 2); }
+  if (fstep == 100) { tft.drawString("   100Hz", 220, 61, 2); }
+}
+
+//----------- Main frequency screen -------------------
+
+void freqlcd() {
+  int mojisuu = (freqt.length());
+  String formattedFreq = "";
+  
+  if (freq >= 1000000) {
+    formattedFreq = String(freq / 1000000) + "." + 
+                   String((freq % 1000000) / 10000) + "." + 
+                   String((freq % 10000) / 100) + "." + 
+                   String(freq % 100);
+  } else if (freq >= 10000) {
+    formattedFreq = String(freq / 1000) + "." + String(freq % 1000);
+  } else {
+    formattedFreq = String(freq);
+  }
+  
+  tft.fillRect(19, 9, 280, 36, TFT_BLACK);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.setTextSize(2);
+  tft.drawString(formattedFreq, 20, 9, 4);
+}
+
+//----------- Basic Screen -------------------------
+
+void screen01() {
+  tft.drawRect(1, 1, 314, 55, TFT_WHITE);
+  tft.drawRect(2, 2, 312, 53, TFT_WHITE);
+  
+  tft.fillRoundRect(5, 60, 60, 25, 3, TFT_GRAY);
+  tft.fillRoundRect(75, 60, 60, 25, 3, TFT_GRAY);
+  tft.fillRoundRect(5, 90, 60, 25, 3, TFT_GRAY);
+  tft.fillRoundRect(75, 90, 60, 25, 3, TFT_GRAY);
+  
+  tft.setTextColor(TFT_BLACK, TFT_GRAY);
+  tft.drawString("LSB", 12, 65, 2);
+  tft.drawString("USB", 82, 65, 2);
+  tft.drawString("C W", 12, 95, 2);
+  tft.drawString("A M", 82, 95, 2);
+  
+  tft.drawRoundRect(220, 60, 95, 25, 3, TFT_WHITE);
+  tft.drawRoundRect(220, 90, 95, 25, 3, TFT_WHITE);
+  
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.drawString("STEP", 175, 65, 2);
+  tft.drawString("RIT", 190, 95, 2);
+  
+  tft.setTextColor(TFT_GRAY, TFT_BLACK);
+  tft.drawString(" S:  1-----3-------6-------9---Over--------", 10, 180, 1);
+  tft.drawString(" P:  1-----3-----5-----------10--------------", 10, 160, 1);
+  
+  tft.setTextColor(TFT_MAGENTA, TFT_BLACK);
+  tft.drawString("ESP32-S3 VFO(with BFO) Ver1.0 JA2GQP", 10, 220, 1);
+  
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.setTextSize(2);
+  tft.drawString("0", 273, 9, 4);
+}
+
+//---------- Band data call from eeprom ----------
+
+void bandcall() {
+  band = band + 1;
+  if (band > (bandmax - 1)) { band = 0; }
+  romadd = 0x010 + (band * 0x010);
+  for (int i = 0; i < 3; i++) {
+    romf[i] = Fnc_eepRD((romadd + 4 * i));
+  }
+  freq = romf[0];
+  freqmin = romf[1];
+  freqmax = romf[2];
+  Status = EEPROM.read(romadd + 12, &fmode);
+  Status = EEPROM.read(romadd + 14, &steprom);
+
+  if (steprom == 1) { fstep = 1; }
+  if (steprom == 2) { fstep = 10; }
+  if (steprom == 3) { fstep = 100; }
+
+  modeset();
+  steplcd();
+  freqt = String(freq);
+  freqlcd();
+  banddataout();
+  chlcd();
+  while (digitalRead(SW_BAND) == LOW);
+}
+
+//---------- Band data write to eeprom ----------
+
+void bandwrite() {
+  romadd = 0x010 + (band * 0x010);
+  Fnc_eepWT(freq, romadd);
+  Status = EEPROM.write(EEP_BAND, band);
+  Status = EEPROM.write(romadd + 12, fmode);
+  if (fstep == 1) { steprom = 1; }
+  if (fstep == 10) { steprom = 2; }
+  if (fstep == 100) { steprom = 3; }
+  Status = EEPROM.write(romadd + 14, steprom);
+}
+
+//----------  Function EEPROM Initialize  ---------
+
+void Fnc_eepINIT() {
+  if (!EEPROM.begin(1024)) {
+    Serial.println("Failed to initialize EEPROM");
+    while (1);
+  }
+}
+
+//----------  Function EEPROM Read(4byte)  ---------
+
+long Fnc_eepRD(uint16_t adr) {
+  long val = 0;
+  uint16_t dat;
+  
+  EEPROM.get(adr, val);
+  return val;
+}
+
+//----------  Function EEPROM Write(4byte)  ---------
+
+void Fnc_eepWT(long dat, uint16_t adr) {
+  EEPROM.put(adr, dat);
+  EEPROM.commit();
+}
+
+//---------- Band data output I/O ----------
+
+void banddataout() {
+  digitalWrite(BAND_OUT1, LOW);
+  digitalWrite(BAND_OUT2, LOW);
+  digitalWrite(BAND_OUT3, LOW);
+  
+  switch (band) {
+    case 1: digitalWrite(BAND_OUT1, HIGH); break;
+    case 2: digitalWrite(BAND_OUT2, HIGH); break;
+    case 3: digitalWrite(BAND_OUT1, HIGH); digitalWrite(BAND_OUT2, HIGH); break;
+    case 4: digitalWrite(BAND_OUT3, HIGH); break;
+    case 5: digitalWrite(BAND_OUT1, HIGH); digitalWrite(BAND_OUT3, HIGH); break;
+    case 6: digitalWrite(BAND_OUT2, HIGH); digitalWrite(BAND_OUT3, HIGH); break;
+    case 7: digitalWrite(BAND_OUT1, HIGH); digitalWrite(BAND_OUT2, HIGH); digitalWrite(BAND_OUT3, HIGH); break;
+  }
+}
+
+//----------  Band No.(Chanel No.) write to LCD ----------
+
+void chlcd() {
+  tft.fillRect(5, 120, 80, 20, TFT_BLACK);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.drawString("CH: " + String(band + 1), 12, 120, 2);
+}
