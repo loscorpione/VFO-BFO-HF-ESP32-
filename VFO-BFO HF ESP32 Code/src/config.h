@@ -19,13 +19,29 @@
 // Indirizzo I2C del PCF8574A
 #define PCF8574A_ADDRESS 0x20
 
+// Frequenze BFO
+#define BFO_USB_FREQ 453000    // BFO per USB (IF 455kHz - offset 2kHz)
+#define BFO_LSB_FREQ 457000    // BFO per LSB (IF 455kHz + offset 2kHz)
+#define BFO_CW_FREQ  454000    // BFO per CW (IF 455kHz - offset 1kHz)
+#define BFO_OFF      0         // BFO disattivato per AM
+
+// Display BFO
+#define BFO_DISPLAY_X 160      // Posizione X del display BFO
+#define BFO_DISPLAY_Y 100      // Posizione Y del display BFO
+#define BFO_DISPLAY_WIDTH 120  // Larghezza display BFO
+#define BFO_DISPLAY_HEIGHT 25  // Altezza display BFO
+#define BFO_GRAPH_WIDTH 100    // Larghezza grafico
+#define BFO_GRAPH_HEIGHT 8     // Altezza grafico
+#define BFO_GRAPH_X 170        // Posizione X grafico
+#define BFO_GRAPH_Y 115        // Posizione Y grafico
+
 // Frequenza IF del ricevitore
 #define IF_FREQUENCY 455000
 
 // S-Meter - Pin e configurazione
 #define S_METER_PIN 15          // Pin analogico per il S-meter
 #define S_METER_X 10             // Posizione X
-#define S_METER_Y 200           // Posizione Y (parte bassa libera del display)
+#define S_METER_Y 150           // Posizione Y (parte bassa libera del display)
 #define S_METER_WIDTH 300       // Larghezza totale
 #define S_METER_HEIGHT 15       // Altezza
 #define S_METER_SEGMENTS 25     // Numero di segmenti
@@ -37,12 +53,25 @@
 #define S_METER_BG_COLOR TFT_DARKGREY
 #define S_METER_BORDER_COLOR TFT_WHITE
 
+// Posizione riquadri (banda, modalità, AGC, ATT) 
+#define POSITION_X 8
+#define POSITION_Y 200
+#define BOX_NUM 4
+#define BOX_WIDTH 70
+#define BOX_HEIGHT 40
+#define BOX_SPACING 8
+#define BOX_RADIUS 5
+#define TEXT_SIZE 2
+#define TEXT_SIZE_TITLE 1
+
 // Variabili globali
 extern unsigned long vfoFrequency;
 extern unsigned long displayedFrequency;
 extern unsigned long step;
 extern unsigned long minFreq;
 extern unsigned long maxFreq;
+extern bool bfoEnabled;
+extern unsigned long bfoFrequency;
 
 // Colori personalizzati
 #define FREQUENCY_COLOR TFT_GREEN

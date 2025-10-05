@@ -3,47 +3,173 @@
 #include "bands.h"
 #include "modes.h"
 #include "s_meter.h"
-
+#include "PLL.h"
 
 TFT_eSPI tft;
+TFT_eSprite freqSprite = TFT_eSprite(&tft);  // Definisci lo Sprite
 
-void drawDisplayLayout() {
-  // Riquadro principale frequenza (in alto) - Arrotondato
-  tft.fillRoundRect(5, 5, 230, 90, 10, BACKGROUND_COLOR);
-  tft.drawRoundRect(5, 5, 230, 90, 10, BORDER_COLOR);
-  tft.drawRoundRect(6, 6, 228, 88, 10, BORDER_COLOR);
+// Variabili per l'aggiornamento della frequenza
+static String lastFreqStr = "";
+static int lastSpriteWidth = 0;
+static int lastSpriteX = 0;
+
+// Disegna lo sprite della frequenza
+void setupFrequencySprite() {
+  // Crea uno sprite di 250x60 pixel (abbastanza grande per la frequenza)
+  freqSprite.setColorDepth(8);
+  freqSprite.createSprite(250, 60);
+  freqSprite.fillSprite(BACKGROUND_COLOR);
+  freqSprite.setTextColor(FREQUENCY_COLOR, BACKGROUND_COLOR);
+  freqSprite.setTextFont(7);
+  freqSprite.setTextSize(0);
+}
+
+// Disegna il display BFO
+void drawBFODisplay() {
+  static unsigned long lastBFOFreq = 0;
+  static bool lastBFOEnabled = false;
   
-  // Riquadro step (in basso a destra) - Arrotondato
-  tft.fillRoundRect(240, 55, 75, 35, 8, BACKGROUND_COLOR);
-  tft.drawRoundRect(240, 55, 75, 35, 8, BORDER_COLOR);
-  tft.drawRoundRect(241, 56, 73, 33, 8, BORDER_COLOR);
+  if (abs((long)(bfoFrequency - lastBFOFreq)) > 100 || bfoEnabled != lastBFOEnabled) {
+    tft.fillRect(BFO_DISPLAY_X, BFO_DISPLAY_Y, BFO_DISPLAY_WIDTH, BFO_DISPLAY_HEIGHT, BACKGROUND_COLOR);
+    
+    if (bfoEnabled) {
+      tft.drawFastHLine(BFO_GRAPH_X, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT/2, BFO_GRAPH_WIDTH, TFT_WHITE);
+      
+      int markerPos = map(bfoFrequency, 452000, 458000, BFO_GRAPH_X, BFO_GRAPH_X + BFO_GRAPH_WIDTH);
+      markerPos = constrain(markerPos, BFO_GRAPH_X, BFO_GRAPH_X + BFO_GRAPH_WIDTH);
+      
+      tft.drawFastVLine(markerPos, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_GREEN);
+      tft.fillCircle(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT/2, 2, TFT_YELLOW);
+      
+      tft.setTextColor(TFT_CYAN, BACKGROUND_COLOR);
+      tft.setTextSize(1);
+      tft.setCursor(BFO_DISPLAY_X, BFO_DISPLAY_Y);
+      tft.print("BFO: ");
+      tft.print(bfoFrequency / 1000.0, 2);
+      tft.print(" kHz");
+      
+      tft.setTextColor(TFT_WHITE, BACKGROUND_COLOR);
+      tft.setTextSize(1);
+      tft.setCursor(BFO_GRAPH_X - 15, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 5);
+      tft.print("452");
+      tft.setCursor(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2 - 5, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 5);
+      tft.print("455");
+      tft.setCursor(BFO_GRAPH_X + BFO_GRAPH_WIDTH - 15, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 5);
+      tft.print("458");
+    }
+    
+    lastBFOFreq = bfoFrequency;
+    lastBFOEnabled = bfoEnabled;
+  }
+}
+// Aggiorna la visualizzazione della frequenza
+void updateFrequencyDisplay() {
+  String freqStr = formatFrequency(displayedFrequency); 
   
-  // Riquadro banda (in basso a sinistra) - Arrotondato
-  tft.fillRoundRect(5, 100, 65, 40, 5, BACKGROUND_COLOR);
-  tft.drawRoundRect(5, 100, 65, 40, 5, BORDER_COLOR);
+  // Aggiorna solo se la stringa è cambiata
+  if (freqStr != lastFreqStr) {
+
+    // Calcola la posizione in base alla lunghezza
+    int xPos;
+    int textWidth = freqStr.length() * 24;
+    
+    if (textWidth == 216) xPos = 0;       // 9 caratteri
+    else if (textWidth == 192) xPos = 32; // 8 caratteri
+    else xPos = 32; // Default
+    
+    // Pulisci lo sprite
+    freqSprite.fillSprite(BACKGROUND_COLOR);
+    
+    // Disegna la frequenza sullo sprite
+    freqSprite.drawString(freqStr, xPos, 5);
+    
+    // Calcola la posizione di destinazione sul display
+    int destX = 25; // Posizione fissa sul display
+    int destY = 30;
+    
+    // Push dello sprite sul display (senza transparenza, tutto opaco)
+    freqSprite.pushSprite(destX, destY);
+    
+    lastFreqStr = freqStr;
+    lastSpriteWidth = textWidth;
+    lastSpriteX = xPos;
+  }
+}
+
+// Aggiorna la visualizzazione dello step
+void updateStepDisplay() {
+  static String lastStepStr = "";
   
-  // Riquadro modalità (in basso al centro) - Arrotondato
-  tft.fillRoundRect(80, 100, 70, 40, 5, BACKGROUND_COLOR);
-  tft.drawRoundRect(80, 100, 70, 40, 5, BORDER_COLOR);
+  String stepStr;
+  if (step == 10) stepStr = "10Hz";
+  else if (step == 100) stepStr = "100Hz";
+  else if (step == 1000) stepStr = "1kHz";
+  else if (step == 10000) stepStr = "10kHz";
   
-  // Etichetta Frequency
+  if (stepStr != lastStepStr) {
+    tft.fillRect(70, 100, 85, 25, BACKGROUND_COLOR);
+    tft.setTextColor(STEP_COLOR, BACKGROUND_COLOR);
+    tft.setTextSize(2);
+    
+    tft.drawString(stepStr, 70, 100);
+    lastStepStr = stepStr;
+  }
+}
+
+// Formatta la frequenza in una stringa leggibile
+String formatFrequency(unsigned long freq) {
+  static char buffer[12];
+  
+  if (freq >= 1000000) {
+    unsigned long mhz = freq / 1000000;
+    unsigned long hz = freq % 1000000;
+    unsigned long khz_part = hz / 1000;
+    unsigned long hz_part = hz % 1000;
+    
+    snprintf(buffer, sizeof(buffer), "%lu.%03lu.%02lu", mhz, khz_part, hz_part / 10);
+  } else {
+    unsigned long khz = freq / 1000;
+    unsigned long hz = freq % 1000;
+    snprintf(buffer, sizeof(buffer), "%lu.%02lu", khz, hz / 10);
+  }
+  
+  return String(buffer);
+}
+
+// Disegna il layout iniziale del display
+void drawDisplayLayout() {        
+  // Prima inizializza lo sprite
+  setupFrequencySprite();
+
+  // Riquadri con etichetta (banda, modalità, AGC, ATT)
+  const char *LABELS[] = {"BAND", "MODE", "AGC", "ATT"};
   tft.setTextColor(TFT_WHITE, BACKGROUND_COLOR);
-  tft.setTextSize(1);
-  tft.drawString("FREQUENCY", 10, 15);
-  
-  // Etichetta Step
-  tft.drawString("STEP", 250, 40);
-  
-  // Etichetta Band
-  tft.drawString("BAND", 10, 108);
-  
-  // Etichetta Mode
-  tft.drawString("MODE", 85, 108);
+  tft.setTextFont(1);
+  tft.setTextSize(TEXT_SIZE_TITLE);
 
-// Inizializza S-meter
+  for (int i = 0; i < BOX_NUM; i++) {
+    int x = POSITION_X + i * (BOX_WIDTH + BOX_SPACING);
+    int y = POSITION_Y;
+    tft.fillRoundRect(x, y, BOX_WIDTH, BOX_HEIGHT, BOX_RADIUS, BACKGROUND_COLOR);
+    tft.drawRoundRect(x, y, BOX_WIDTH, BOX_HEIGHT, BOX_RADIUS, BORDER_COLOR);
+    tft.drawRoundRect(x+1, y+1, BOX_WIDTH-2, BOX_HEIGHT-2, BOX_RADIUS, BORDER_COLOR);
+
+    String TEXT = LABELS[i];
+    int textWidth = TEXT.length() * 5;
+    int textX = x + (BOX_WIDTH - textWidth) / 2;
+    int textY = y + 5;
+    tft.drawString(TEXT, textX, textY);
+  }
+
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_BLUE, BACKGROUND_COLOR);
+  tft.drawString("Mhz", 280, 62);
+  
+  tft.setTextColor(TFT_RED, BACKGROUND_COLOR);
+  tft.drawString("STEP:", 10, 100);
+  
   setupSMeter();
   
-  // Aggiungi le etichette S-unit (senza valore numerico)
   tft.setTextColor(TFT_WHITE, BACKGROUND_COLOR);
   tft.setTextSize(1);
   
@@ -68,64 +194,10 @@ void drawDisplayLayout() {
     }
   }
   
-  // Ripristina il colore del testo
   tft.setTextColor(TFT_WHITE, BACKGROUND_COLOR);
-}
-
-void updateFrequencyDisplay() {
-  String freqStr = formatFrequency(displayedFrequency);
+  drawBFODisplay();
   
-  tft.fillRect(10, 30, 220, 55, BACKGROUND_COLOR);
-  tft.setTextColor(FREQUENCY_COLOR, BACKGROUND_COLOR);
-  tft.setTextSize(4);
-  
-  int textWidth = freqStr.length() * 24;
-  int xPos = 10 + (220 - textWidth) / 2;
-  if (xPos < 10) xPos = 10;
-  tft.drawString(freqStr, xPos, 35);
-}
-
-void updateStepDisplay() {
-  tft.fillRoundRect(245, 60, 65, 25, 5, BACKGROUND_COLOR);
-  tft.setTextColor(STEP_COLOR, BACKGROUND_COLOR);
-  tft.setTextSize(2);
-  
-  String stepStr;
-  if (step == 10) stepStr = "10Hz";
-  else if (step == 100) stepStr = "100Hz";
-  else if (step == 1000) stepStr = "1kHz";
-  else if (step == 10000) stepStr = "10kHz";
-  
-  int textWidth = stepStr.length() * 12;
-  int xPos = 245 + (65 - textWidth) / 2;
-  tft.drawString(stepStr, xPos, 63);
-}
-
-String formatFrequency(unsigned long freq) {
-  String result;
-  
-  if (freq >= 1000000) {
-    unsigned long mhz = freq / 1000000;
-    unsigned long hz = freq % 1000000;
-    unsigned long khz_part = hz / 1000;
-    unsigned long hz_part = hz % 1000;
-    
-    result = String(mhz) + ".";
-    if (khz_part < 100) result += "0";
-    if (khz_part < 10) result += "0";
-    result += String(khz_part);
-    result += ".";
-    unsigned short last_two_digits = hz_part / 10;
-    if (last_two_digits < 10) result += "0";
-    result += String(last_two_digits);
-  } else {
-    unsigned long khz = freq / 1000;
-    unsigned long hz = freq % 1000;
-    result = String(khz) + ".";
-    unsigned short decimal_part = hz / 10;
-    if (decimal_part < 10) result += "0";
-    result += String(decimal_part);
-  }
-  
-  return result;
+  // Inizializza la visualizzazione della frequenza
+  lastFreqStr = ""; // Forza l'aggiornamento iniziale
+  updateFrequencyDisplay();
 }

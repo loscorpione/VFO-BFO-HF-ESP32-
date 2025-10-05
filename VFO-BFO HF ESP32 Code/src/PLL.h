@@ -7,5 +7,8 @@ extern Si5351 si5351;
 
 void setupSI5351();
 void updateFrequency();
+void updateBFO();
+void enableBFO();
+void disableBFO();
 
 #endif

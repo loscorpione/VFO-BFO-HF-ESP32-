@@ -2,9 +2,9 @@
 #define MODES_H
 
 enum Mode {
+  MODE_AM,
   MODE_LSB,
   MODE_USB,
-  MODE_AM,
   MODE_CW,
   MODE_COUNT
 };
@@ -15,5 +15,6 @@ extern int currentMode;
 void changeMode();
 void updateModeOutputs();
 void updateModeInfo();
+void updateBFOForMode();  // Nuova funzione
 
 #endif

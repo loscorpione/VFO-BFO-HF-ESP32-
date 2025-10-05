@@ -1,10 +1,11 @@
 #include "bands.h"
 #include "config.h"
-#include "pcf8574.h" 
+#include "DigiOUT.h" 
 #include <TFT_eSPI.h>
 
 extern TFT_eSPI tft;
 
+// Definizione delle bande
 Band bands[] = {
   {"160m", 1830000, 1850000},
   {"80m", 3500000, 3800000},
@@ -30,26 +31,35 @@ int getBandIndex(unsigned long freq) {
   return -1;
 }
 
+// Cambia alla banda successiva
 void changeBand() {
   currentBandIndex = (currentBandIndex + 1) % totalBands;
   displayedFrequency = bands[currentBandIndex].startFreq;
   vfoFrequency = displayedFrequency - IF_FREQUENCY;
-  updatePCF8574Output();
+  updateDigiOUTOutput();// Aggiorna le uscite digitali
 }
 
+// Aggiorna la visualizzazione della banda
 void updateBandInfo() {
+  static int lastBandIndex = -1; // Memorizza l'ultima banda visualizzata
+  
   int bandIndex = getBandIndex(displayedFrequency);
   
-  tft.fillRect(7, 118, 60, 15, BACKGROUND_COLOR);
-  tft.setTextColor(BAND_COLOR, BACKGROUND_COLOR);
-  tft.setTextSize(2);
-  
-  if (bandIndex >= 0) {
-    tft.drawString(bands[bandIndex].name, 15, 118);
-    currentBandIndex = bandIndex;
-  } else {
-    tft.drawString("--", 25, 118);
+  // Aggiorna solo se la banda è cambiata
+  if (bandIndex != lastBandIndex) {
+    tft.fillRect(25, 218, 35, 15, BACKGROUND_COLOR);
+    tft.setTextColor(BAND_COLOR, BACKGROUND_COLOR);
+    tft.setTextSize(2);
+    
+    if (bandIndex >= 0) {
+      tft.drawString(bands[bandIndex].name, 25, 218);
+      currentBandIndex = bandIndex;
+    } else {
+      tft.drawString("    ", 25, 218);
+    }
+    
+    lastBandIndex = bandIndex;
   }
-
-  updatePCF8574Output();
+   // Aggiorna SEMPRE le uscite digitali quando si aggiorna la banda
+  updateDigiOUTOutput();
 }

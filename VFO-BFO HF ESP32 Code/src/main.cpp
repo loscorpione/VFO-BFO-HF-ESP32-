@@ -6,10 +6,11 @@
 #include "bands.h"
 #include "modes.h"
 #include "s_meter.h"
-#include "pcf8574.h" 
+#include "DigiOUT.h" 
+
 
 // Variabili globali
-unsigned long vfoFrequency = 7000000 - IF_FREQUENCY;
+unsigned long vfoFrequency = 7000000 + IF_FREQUENCY;
 unsigned long displayedFrequency = 7000000;
 unsigned long step = 1000;
 unsigned long minFreq = 1000000;
@@ -33,6 +34,25 @@ int encoderCount = 0;
 void setup() {
   Serial.begin(115200);
   delay(1000);
+  Serial.println("Avvio VFO-BFO...");
+
+  // Inizializzazione display PRIMA di tutto
+  Serial.println("Inizializzazione display...");
+  tft.init();
+  tft.setRotation(1);
+  tft.fillScreen(BACKGROUND_COLOR);
+  
+  drawDisplayLayout(); // Questo inizializza anche lo sprite
+
+  // DEBUG: Verifica frequenza iniziale
+  Serial.print("Frequenza iniziale - displayedFrequency: ");
+  Serial.println(displayedFrequency);
+  Serial.print("Frequenza iniziale - vfoFrequency: ");
+  Serial.println(vfoFrequency);
+
+  // Inizializzazione DigiOUT - DEVE essere PRIMA di tutto
+  Serial.println("Inizializzazione DigiOUT...");
+  setupDigiOUT();
 
   // Inizializzazione display
   tft.init();
@@ -44,7 +64,7 @@ void setup() {
   updateStepDisplay();
   updateBandInfo();
   updateModeInfo();
-
+  
   // Configurazione encoder e pulsanti
   pinMode(ENC_CLK, INPUT_PULLUP);
   pinMode(ENC_DT, INPUT_PULLUP);
@@ -64,9 +84,15 @@ void setup() {
   setupSI5351();
   updateFrequency();
 
-  // Inizializzazione PCF8574
-  setupPCF8574();
+  // Inizializzazione DigiOUT - DEVE essere PRIMA di updateBandInfo()
+  setupDigiOUT();
 
+  // Inizializzazione BFO per modalità corrente
+  updateBFOForMode();
+
+  // Aggiorna le informazioni di banda e modalità DOPO l'inizializzazione del DigiOUT
+  updateBandInfo();
+  updateModeInfo();
 }
 
 void loop() {
@@ -126,4 +152,12 @@ void loop() {
     updateSMeter();
     lastSMeterUpdate = millis();
   }
+
+  // Aggiorna display BFO ogni 500ms (opzionale)
+  static unsigned long lastBFOUpdate = 0;
+  if (millis() - lastBFOUpdate > 500) {
+    drawBFODisplay();
+    lastBFOUpdate = millis();
+  }
+
 }

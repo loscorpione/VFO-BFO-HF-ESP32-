@@ -4,7 +4,7 @@
 #include "modes.h"
 #include "display.h"
 #include "PLL.h"
-#include "pcf8574.h"
+#include "DigiOUT.h"
 #include <Arduino.h>
 
 extern unsigned long lastEncoderRead;
@@ -14,6 +14,9 @@ extern bool buttonPressed;
 extern unsigned long lastButtonPress;
 
 void readEncoder() {
+  static unsigned long lastUpdate = 0;
+  const unsigned long UPDATE_INTERVAL = 50000; // 50ms tra gli aggiornamenti
+  
   int MSB = digitalRead(ENC_CLK);
   int LSB = digitalRead(ENC_DT);
 
@@ -23,27 +26,33 @@ void readEncoder() {
   if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {
     encoderCount++;
     if (encoderCount >= 2) {
-      displayedFrequency += step;
-      if (displayedFrequency > maxFreq) displayedFrequency = maxFreq;
-      vfoFrequency = displayedFrequency - IF_FREQUENCY;
-      updateFrequency();
-      updateFrequencyDisplay();
-      updateBandInfo();
-      updatePCF8574Output(); 
-      encoderCount = 0;
+      if (micros() - lastUpdate > UPDATE_INTERVAL) {
+        displayedFrequency += step;
+        if (displayedFrequency > maxFreq) displayedFrequency = maxFreq;
+        vfoFrequency = displayedFrequency + IF_FREQUENCY;
+        updateFrequency();
+        updateFrequencyDisplay(); // Ora usa lo sprite - ZERO flickering!
+        updateBandInfo();
+        updateDigiOUTOutput(); 
+        encoderCount = 0;
+        lastUpdate = micros();
+      }
     }
   }
   else if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {
     encoderCount++;
     if (encoderCount >= 2) {
-      displayedFrequency -= step;
-      if (displayedFrequency < minFreq) displayedFrequency = minFreq;
-      vfoFrequency = displayedFrequency - IF_FREQUENCY;
-      updateFrequency();
-      updateFrequencyDisplay();
-      updateBandInfo();
-      updatePCF8574Output(); 
-      encoderCount = 0;
+      if (micros() - lastUpdate > UPDATE_INTERVAL) {
+        displayedFrequency -= step;
+        if (displayedFrequency < minFreq) displayedFrequency = minFreq;
+        vfoFrequency = displayedFrequency + IF_FREQUENCY;
+        updateFrequency();
+        updateFrequencyDisplay(); // Ora usa lo sprite - ZERO flickering!
+        updateBandInfo();
+        updateDigiOUTOutput(); 
+        encoderCount = 0;
+        lastUpdate = micros();
+      }
     }
   }
 
