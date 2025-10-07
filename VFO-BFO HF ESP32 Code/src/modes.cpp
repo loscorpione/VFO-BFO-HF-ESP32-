@@ -12,7 +12,7 @@ int currentMode = MODE_AM;
 
 void changeMode() {
   currentMode = (currentMode + 1) % MODE_COUNT;
-  updateBFOForMode();  // Aggiorna BFO quando cambia modalità
+  updateBFOForMode();
 }
 
 void updateModeOutputs() {
@@ -21,33 +21,51 @@ void updateModeOutputs() {
 }
 
 void updateBFOForMode() {
+  // Salva l'offset corrente per la modalità uscente
+  if (bfoEnabled) {
+    switch(currentMode) {
+      case MODE_LSB:
+        bfoPitchOffset[0] = currentBFOOffset;
+        break;
+      case MODE_USB:
+        bfoPitchOffset[1] = currentBFOOffset;
+        break;
+      case MODE_CW:
+        bfoPitchOffset[2] = currentBFOOffset;
+        break;
+    }
+  }
+  
+  // Applica la nuova modalità
   switch(currentMode) {
     case MODE_AM:
       disableBFO();
       break;
     case MODE_LSB:
-      bfoFrequency = BFO_LSB_FREQ;
+      currentBFOOffset = bfoPitchOffset[0];
+      bfoFrequency = BFO_LSB_BASE + currentBFOOffset;
       enableBFO();
       break;
     case MODE_USB:
-      bfoFrequency = BFO_USB_FREQ;
+      currentBFOOffset = bfoPitchOffset[1];
+      bfoFrequency = BFO_USB_BASE + currentBFOOffset;
       enableBFO();
       break;
     case MODE_CW:
-      bfoFrequency = BFO_CW_FREQ;
+      currentBFOOffset = bfoPitchOffset[2];
+      bfoFrequency = BFO_CW_BASE + currentBFOOffset;
       enableBFO();
       break;
   }
-  updateBFO(); // Aggiorna frequenza uscita BFO
-  drawBFODisplay();  // Aggiorna il display BFO
+  updateBFO();
 }
 
 void updateModeInfo() {
-  static int lastMode = -1; // Memorizza l'ultima modalità visualizzata
-  static bool lastBFOState = false; // Memorizza l'ultimo stato BFO
+  static int lastMode = -1;
+  static bool lastBFOState = false;
+  static int lastBFOOffset = 0;
   
-  // Aggiorna solo se la modalità è cambiata o lo stato BFO è cambiato
-  if (currentMode != lastMode || bfoEnabled != lastBFOState) {
+  if (currentMode != lastMode || bfoEnabled != lastBFOState || currentBFOOffset != lastBFOOffset) {
     int Pos_X;
     if (currentMode == MODE_AM) Pos_X= 112;
     else if (currentMode == MODE_LSB) Pos_X= 106;
@@ -62,8 +80,8 @@ void updateModeInfo() {
     
     lastMode = currentMode;
     lastBFOState = bfoEnabled;
+    lastBFOOffset = currentBFOOffset;
   }
   
-  // Aggiorna sempre il display BFO (ha già la sua logica di ottimizzazione)
   drawBFODisplay();
 }

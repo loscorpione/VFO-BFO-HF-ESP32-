@@ -19,21 +19,28 @@
 // Indirizzo I2C del PCF8574A
 #define PCF8574A_ADDRESS 0x20
 
-// Frequenze BFO
-#define BFO_USB_FREQ 453000    // BFO per USB (IF 455kHz - offset 2kHz)
-#define BFO_LSB_FREQ 457000    // BFO per LSB (IF 455kHz + offset 2kHz)
-#define BFO_CW_FREQ  454000    // BFO per CW (IF 455kHz - offset 1kHz)
-#define BFO_OFF      0         // BFO disattivato per AM
+// Regolazione Pitch BFO
+#define BFO_PITCH_PIN 0           // GPIO per il potenziometro pitch BFO
+#define BFO_PITCH_RANGE 1200      // ±600Hz range totale (più fine)
+#define BFO_PITCH_CENTER 600      // Centro del range
+#define BFO_PITCH_DEADZONE 2      // Deadzone più piccola per controllo fine
+
+// Frequenze BFO base (con offset di 1.5kHz)
+#define BFO_USB_BASE 453500       // BFO per USB (IF 455kHz - offset 1.5kHz)
+#define BFO_LSB_BASE 456500       // BFO per LSB (IF 455kHz + offset 1.5kHz)
+#define BFO_CW_BASE 454000        // BFO per CW (IF 455kHz - offset 1kHz) - mantenuto per CW
 
 // Display BFO
-#define BFO_DISPLAY_X 160      // Posizione X del display BFO
-#define BFO_DISPLAY_Y 100      // Posizione Y del display BFO
+#define BFO_DISPLAY_X 70      // Posizione X del display BFO
+#define BFO_DISPLAY_Y 115      // Posizione Y del display BFO
 #define BFO_DISPLAY_WIDTH 120  // Larghezza display BFO
-#define BFO_DISPLAY_HEIGHT 25  // Altezza display BFO
+#define BFO_DISPLAY_HEIGHT 40  // Altezza display BFO
 #define BFO_GRAPH_WIDTH 100    // Larghezza grafico
-#define BFO_GRAPH_HEIGHT 8     // Altezza grafico
-#define BFO_GRAPH_X 170        // Posizione X grafico
-#define BFO_GRAPH_Y 115        // Posizione Y grafico
+#define BFO_GRAPH_HEIGHT 12     // Altezza grafico
+#define BFO_GRAPH_X 70       // Posizione X grafico
+#define BFO_GRAPH_Y 130        // Posizione Y grafico
+#define BFO_MARKER_HEIGHT 10   // Altezza linea verticale
+#define BFO_CENTER_MARKER_HEIGHT 12  // Altezza marcatore centrale
 
 // Frequenza IF del ricevitore
 #define IF_FREQUENCY 455000
@@ -41,7 +48,7 @@
 // S-Meter - Pin e configurazione
 #define S_METER_PIN 15          // Pin analogico per il S-meter
 #define S_METER_X 10             // Posizione X
-#define S_METER_Y 150           // Posizione Y (parte bassa libera del display)
+#define S_METER_Y 165           // Posizione Y (parte bassa libera del display)
 #define S_METER_WIDTH 300       // Larghezza totale
 #define S_METER_HEIGHT 15       // Altezza
 #define S_METER_SEGMENTS 25     // Numero di segmenti
@@ -72,6 +79,8 @@ extern unsigned long minFreq;
 extern unsigned long maxFreq;
 extern bool bfoEnabled;
 extern unsigned long bfoFrequency;
+extern int bfoPitchOffset[];
+extern int currentBFOOffset;
 
 // Colori personalizzati
 #define FREQUENCY_COLOR TFT_GREEN

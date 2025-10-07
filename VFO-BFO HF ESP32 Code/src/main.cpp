@@ -153,11 +153,17 @@ void loop() {
     lastSMeterUpdate = millis();
   }
 
-  // Aggiorna display BFO ogni 500ms (opzionale)
+  // Aggiorna display BFO ogni 100ms
   static unsigned long lastBFOUpdate = 0;
-  if (millis() - lastBFOUpdate > 500) {
+  if (millis() - lastBFOUpdate > 100) {
     drawBFODisplay();
     lastBFOUpdate = millis();
   }
 
+  // Aggiorna regolazione pitch BFO ogni 100ms (più reattivo)
+  static unsigned long lastPitchUpdate = 0;
+  if (millis() - lastPitchUpdate > 100) {
+    updateBFOFromPitch();
+    lastPitchUpdate = millis();
+  }
 }

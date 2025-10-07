@@ -10,5 +10,7 @@ void updateFrequency();
 void updateBFO();
 void enableBFO();
 void disableBFO();
+void updateBFOFromPitch();       // Nuova funzione
+int readBFOPitch();              // Nuova funzione
 
 #endif

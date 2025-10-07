@@ -30,31 +30,42 @@ void drawBFODisplay() {
   static bool lastBFOEnabled = false;
   
   if (abs((long)(bfoFrequency - lastBFOFreq)) > 100 || bfoEnabled != lastBFOEnabled) {
-    tft.fillRect(BFO_DISPLAY_X, BFO_DISPLAY_Y, BFO_DISPLAY_WIDTH, BFO_DISPLAY_HEIGHT, BACKGROUND_COLOR);
+    tft.fillRect(BFO_DISPLAY_X-60, BFO_DISPLAY_Y, BFO_DISPLAY_WIDTH+60, BFO_DISPLAY_HEIGHT, BACKGROUND_COLOR);
     
     if (bfoEnabled) {
+      // Disegna il grafico della frequenza BFO
       tft.drawFastHLine(BFO_GRAPH_X, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT/2, BFO_GRAPH_WIDTH, TFT_WHITE);
-      
+
+      // Calcola la posizione del marcatore
       int markerPos = map(bfoFrequency, 452000, 458000, BFO_GRAPH_X, BFO_GRAPH_X + BFO_GRAPH_WIDTH);
       markerPos = constrain(markerPos, BFO_GRAPH_X, BFO_GRAPH_X + BFO_GRAPH_WIDTH);
       
+      // Disegna il marcatore della frequenza BFO
       tft.drawFastVLine(markerPos, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_GREEN);
-      tft.fillCircle(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT/2, 2, TFT_YELLOW);
+      tft.drawFastVLine(markerPos+1, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_GREEN);
       
-      tft.setTextColor(TFT_CYAN, BACKGROUND_COLOR);
+      // Disegna il marcatore centrale
+      tft.drawFastVLine(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2-1, BFO_GRAPH_Y-(BFO_CENTER_MARKER_HEIGHT-BFO_GRAPH_HEIGHT)/2, BFO_CENTER_MARKER_HEIGHT, TFT_RED);
+      //tft.drawFastVLine(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2+1, BFO_GRAPH_Y-(BFO_CENTER_MARKER_HEIGHT-BFO_GRAPH_HEIGHT)/2, BFO_CENTER_MARKER_HEIGHT, TFT_RED);
+      tft.drawFastVLine(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2, BFO_GRAPH_Y-(BFO_CENTER_MARKER_HEIGHT-BFO_GRAPH_HEIGHT)/2, BFO_CENTER_MARKER_HEIGHT, TFT_RED);
+
+      tft.setTextColor(TFT_BLUE, BACKGROUND_COLOR);
       tft.setTextSize(1);
-      tft.setCursor(BFO_DISPLAY_X, BFO_DISPLAY_Y);
-      tft.print("BFO: ");
+      tft.setCursor(BFO_DISPLAY_X+BFO_DISPLAY_WIDTH/2-30, BFO_DISPLAY_Y+5);
       tft.print(bfoFrequency / 1000.0, 2);
-      tft.print(" kHz");
+
+      tft.setTextColor(TFT_BLUE, BACKGROUND_COLOR);
+      tft.setTextSize(2);
+      tft.drawString("BFO:", BFO_DISPLAY_X-60, BFO_DISPLAY_Y+15);
       
+      // Disegna le etichette del grafico
       tft.setTextColor(TFT_WHITE, BACKGROUND_COLOR);
       tft.setTextSize(1);
-      tft.setCursor(BFO_GRAPH_X - 15, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 5);
+      tft.setCursor(BFO_GRAPH_X, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 2);
       tft.print("452");
-      tft.setCursor(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2 - 5, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 5);
+      tft.setCursor(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2 - 8, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 2);
       tft.print("455");
-      tft.setCursor(BFO_GRAPH_X + BFO_GRAPH_WIDTH - 15, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 5);
+      tft.setCursor(BFO_GRAPH_X + BFO_GRAPH_WIDTH - 18, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 2);
       tft.print("458");
     }
     
@@ -107,11 +118,11 @@ void updateStepDisplay() {
   else if (step == 10000) stepStr = "10kHz";
   
   if (stepStr != lastStepStr) {
-    tft.fillRect(70, 100, 85, 25, BACKGROUND_COLOR);
+    tft.fillRect(260, 100, 85, 25, BACKGROUND_COLOR);
     tft.setTextColor(STEP_COLOR, BACKGROUND_COLOR);
     tft.setTextSize(2);
     
-    tft.drawString(stepStr, 70, 100);
+    tft.drawString(stepStr, 255, 100);
     lastStepStr = stepStr;
   }
 }
@@ -163,10 +174,10 @@ void drawDisplayLayout() {
 
   tft.setTextSize(2);
   tft.setTextColor(TFT_BLUE, BACKGROUND_COLOR);
-  tft.drawString("Mhz", 280, 62);
+  tft.drawString("MHz", 280, 70);
   
   tft.setTextColor(TFT_RED, BACKGROUND_COLOR);
-  tft.drawString("STEP:", 10, 100);
+  tft.drawString("STEP:", 195, 100);
   
   setupSMeter();
   
@@ -184,13 +195,13 @@ void drawDisplayLayout() {
     else if (i == 15) tft.drawString("9", segmentX, S_METER_Y + S_METER_HEIGHT + 7);
     else if (i == 18) {
       tft.setTextColor(TFT_ORANGE, BACKGROUND_COLOR);
-      tft.drawString("+20", segmentX - 2, S_METER_Y + S_METER_HEIGHT + 7);
+      tft.drawString("+20", segmentX - 2, S_METER_Y + S_METER_HEIGHT + 3);
     } else if (i == 21) {
       tft.setTextColor(TFT_ORANGE, BACKGROUND_COLOR);
-      tft.drawString("+40", segmentX - 2, S_METER_Y + S_METER_HEIGHT + 7);
+      tft.drawString("+40", segmentX - 2, S_METER_Y + S_METER_HEIGHT + 3);
     } else if (i == 24) {
       tft.setTextColor(TFT_ORANGE, BACKGROUND_COLOR);
-      tft.drawString("+60", segmentX - 2, S_METER_Y + S_METER_HEIGHT + 7);
+      tft.drawString("+60", segmentX - 2, S_METER_Y + S_METER_HEIGHT + 3);
     }
   }
   
