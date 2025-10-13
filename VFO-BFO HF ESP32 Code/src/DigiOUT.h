@@ -2,6 +2,7 @@
 #define DIGIOUT_H
 
 #include <Wire.h>
+#include "functions.h"
 
 // Dichiarazione delle variabili globali necessarie
 extern unsigned long displayedFrequency;

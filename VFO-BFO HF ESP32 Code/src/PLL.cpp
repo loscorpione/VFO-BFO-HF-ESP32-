@@ -14,9 +14,6 @@ unsigned long bfoFrequency = 0;
 int bfoPitchOffset[3] = {0, 0, 0}; // Inizialmente zero
 int currentBFOOffset = 0;
 
-// Variabili encoder pitch BFO
-static int lastPitchEncoded = 0;
-static int pitchEncoderCount = 0;
 
 void setupSI5351() {
   Wire.begin(I2C_SDA, I2C_SCL);
@@ -32,108 +29,29 @@ void setupSI5351() {
   si5351.drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);
   si5351.drive_strength(SI5351_CLK1, SI5351_DRIVE_8MA);
   si5351.output_enable(SI5351_CLK0, 1);
-  si5351.output_enable(SI5351_CLK1, 0);
-  
-
-  // Lettura stato iniziale encoder
-  lastPitchEncoded = (digitalRead(BFO_PITCH_DT) << 1) | digitalRead(BFO_PITCH_CLK);
-  
+  si5351.output_enable(SI5351_CLK1, 0); 
 }
 
+// Aggiorna frequenza VFO
 void updateFrequency() {
   si5351.set_freq(vfoFrequency * 100ULL, SI5351_CLK0);
 }
 
+// Aggiorna frequenza BFO
 void updateBFO() {
   if (bfoEnabled) {
     si5351.set_freq(bfoFrequency * 100ULL, SI5351_CLK1);
   }
 }
 
+// Abilita BFO
 void enableBFO() {
   bfoEnabled = true;
   si5351.output_enable(SI5351_CLK1, 1);
   updateBFO();// Aggiorna con l'offset corrente
 }
-
+// Disabilita BFO
 void disableBFO() {
   bfoEnabled = false;
   si5351.output_enable(SI5351_CLK1, 0);
-}
-
-
-int readBFOEncoder() {
-  static unsigned long lastStableTime = 0;
-  const unsigned long STABLE_TIME = 3; // 3ms di stabilità
-  
-  int MSB = digitalRead(BFO_PITCH_CLK);
-  int LSB = digitalRead(BFO_PITCH_DT);
-  int encoded = (MSB << 1) | LSB;
-
-  // Aspetta che il segnale sia stabile per 3ms
-  static int lastEncoded = 0;
-  static unsigned long changeTime = 0;
-  
-  if (encoded != lastEncoded) {
-    changeTime = millis();
-    lastEncoded = encoded;
-    return 0;
-  }
-  
-  if (millis() - changeTime < STABLE_TIME) {
-    return 0;
-  }
-
-  int sum = (lastPitchEncoded << 2) | encoded;
-  int direction = 0;
-
-  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {
-    pitchEncoderCount++;
-    if (pitchEncoderCount >= 2) {
-      direction = 1;
-      pitchEncoderCount = 0;
-    }
-  }
-  else if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {
-    pitchEncoderCount++;
-    if (pitchEncoderCount >= 2) {
-      direction = -1;
-      pitchEncoderCount = 0;
-    }
-  }
-
-  lastPitchEncoded = encoded;
-  return direction;
-}
-
-void updateBFOFromEncoder() {
-  if (!bfoEnabled) return;
-  
-  int direction = readBFOEncoder();
-  
-  if (direction != 0) {
-    int newOffset = currentBFOOffset + (direction * BFO_PITCH_STEP);
-    
-    // Applica limiti come nel VFO
-    if (newOffset < BFO_PITCH_MIN) newOffset = BFO_PITCH_MIN;
-    if (newOffset > BFO_PITCH_MAX) newOffset = BFO_PITCH_MAX;
-    
-    if (newOffset != currentBFOOffset) {
-      currentBFOOffset = newOffset;
-      
-      // Calcola frequenza BFO con offset
-      switch(currentMode) {
-        case MODE_LSB: bfoFrequency = BFO_LSB_BASE + currentBFOOffset; break;
-        case MODE_USB: bfoFrequency = BFO_USB_BASE + currentBFOOffset; break;
-        case MODE_CW: bfoFrequency = BFO_CW_BASE + currentBFOOffset; break;
-      }
-      
-      updateBFO();
-      
-    }
-  }
-}
-
-void updateBFOFromPitch() {
-  
 }

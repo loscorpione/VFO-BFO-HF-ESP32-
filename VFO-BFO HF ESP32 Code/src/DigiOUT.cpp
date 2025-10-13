@@ -1,7 +1,7 @@
 #include "DigiOUT.h"
 #include "config.h"
 #include "modes.h" 
-#include "comand.h"
+#include "functions.h"
 #include <Arduino.h> 
 
 // Dichiarazione delle variabili globali necessarie
@@ -32,7 +32,7 @@ void setupDigiOUT() {
 void updateModeOutputs() {
   uint8_t outputState = 0;
   
-   // 1. Calcola codice banda (bit 0-3)
+   // Uscita binaria selezione filtri passa banda (bit 0-3)
   if (displayedFrequency >= 1600000 && displayedFrequency < 2500000) {
     outputState = 0b0001;
   }
@@ -54,16 +54,16 @@ void updateModeOutputs() {
   else {
     outputState = 0b0000;
   }
-  
-  // 2. Aggiungi codice modalità (bit 4-5)
+
+  // Uscita binaria selezione modalità (bit 4-5)
   outputState |= (currentMode << 4);
   
-  // 3. Aggiungi AGC (bit 6)
+  // Uscita binaria selettore AGC (bit 6)
   if (agcFastMode) {
     outputState |= (1 << 6);  // AGC Fast
   }
-  
-  // 4. Aggiungi ATT (bit 7)
+
+  // Uscita binaria selettore ATT (bit 7)
   if (attenuatorEnabled) {
     outputState |= (1 << 7);  // ATT -20dB abilitato
   }
@@ -75,7 +75,8 @@ void updateModeOutputs() {
     
     lastOutputState = outputState;
     
-    Serial.print("DigiOUT: Banda:");
+    // Debug output
+/*     Serial.print("DigiOUT: Banda:");
     Serial.print(outputState & 0x0F, BIN);
     Serial.print(" Mode:");
     Serial.print((outputState >> 4) & 0x03, BIN);
@@ -85,7 +86,7 @@ void updateModeOutputs() {
     Serial.print((outputState >> 7) & 0x01 ? "ON" : "OFF");
     Serial.print(" Output:");
     Serial.print(outputState, BIN);
-    Serial.println(error == 0 ? " [OK]" : " [ERROR]");
+    Serial.println(error == 0 ? " [OK]" : " [ERROR]"); */
   }
 }
 

@@ -35,7 +35,7 @@ int getBandIndex(unsigned long freq) {
 void changeBand() {
   currentBandIndex = (currentBandIndex + 1) % totalBands;
   displayedFrequency = bands[currentBandIndex].startFreq;
-  vfoFrequency = displayedFrequency - IF_FREQUENCY;
+  vfoFrequency = displayedFrequency + IF_FREQUENCY;
   updateModeOutputs();// Aggiorna le uscite digitali
 }
 

@@ -10,12 +10,13 @@ extern TFT_eSPI tft;
 const char* modeNames[] = {"AM", "LSB", "USB", "CW"};
 int currentMode = MODE_AM;
 
+// Cambia alla modalità successiva
 void changeMode() {
   currentMode = (currentMode + 1) % MODE_COUNT;
   updateBFOForMode();
 }
 
-
+// Aggiorna BFO in base alla modalità selezionata
 void updateBFOForMode() {
   // Salva l'offset corrente per la modalità uscente
   if (bfoEnabled) {
@@ -56,6 +57,7 @@ void updateBFOForMode() {
   updateBFO();
 }
 
+// Aggiorna visualizzazione della modalità
 void updateModeInfo() {
   static int lastMode = -1;
   static bool lastBFOState = false;

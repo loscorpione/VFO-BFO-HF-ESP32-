@@ -17,7 +17,6 @@ int valueIndex = 0;
 int valueTotal = 0;
 
 void setupSMeter() {
-  //pinMode(S_METER_PIN, INPUT);
   
   // Inizializza il filtro a media mobile
   for (int i = 0; i < SMOOTHING_WINDOW; i++) {
@@ -25,7 +24,7 @@ void setupSMeter() {
   }
   
   // Disegna l'S-meter completo una volta all'inizio
-  tft.fillRect(S_METER_X, S_METER_Y - 15, S_METER_WIDTH, S_METER_HEIGHT + 35, BACKGROUND_COLOR); // Larghezza ridotta
+  tft.fillRect(S_METER_X, S_METER_Y - 15, S_METER_WIDTH, S_METER_HEIGHT + 35, BACKGROUND_COLOR); 
   
   // Disegna tutti i segmenti spenti
   for (int i = 0; i < S_METER_SEGMENTS; i++) {
@@ -120,8 +119,8 @@ void updateSMeter() {
     previousPeak = sMeterPeak;
   }
 
-  // Reset del picco dopo 500 millisecondi
-  if (millis() - lastPeakUpdate > 500) {
+  // Reset del picco dopo 200 millisecondi
+  if (millis() - lastPeakUpdate > 200) {
     sMeterPeak = max(0, sMeterPeak - 1);
     lastPeakUpdate = millis();
   }

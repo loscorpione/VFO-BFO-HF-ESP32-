@@ -1,4 +1,4 @@
-#include "comand.h"
+#include "functions.h"
 #include "config.h"
 #include "DigiOUT.h"
 #include "display.h"
@@ -16,8 +16,8 @@ bool attenuatorEnabled = false;
 bool ATTButtonPressed = false;
 unsigned long lastATTButtonPress = 0;
 
-// ================= AGC FUNCTIONS =================
 
+// Funzioni per gestione AGC
 void changeAGC() {
   agcFastMode = !agcFastMode;
 }
@@ -39,7 +39,7 @@ void updateAGCDisplay() {
 void checkAGCButton() {
  static bool lastAGCState = HIGH; // Assume inizialmente non premuto
   
-  bool currentState = digitalRead(AGC_BUTTON_PIN);
+  bool currentState = digitalRead(SW_AGC);
   
   // Se passa da HIGH a LOW (fronti di discesa)
   if (currentState == LOW && lastAGCState == HIGH) {
@@ -59,8 +59,9 @@ void checkAGCButton() {
     AGCButtonPressed = false;
   }
 }
-// ================= ATT FUNCTIONS =================
 
+
+// Funzioni per gestione ATT
 void changeATT() {
   attenuatorEnabled = !attenuatorEnabled;
 }
@@ -82,9 +83,7 @@ void updateATTDisplay() {
 void checkATTButton() {
   static bool lastATTState = HIGH; // Assume inizialmente non premuto
   
-  bool currentState = digitalRead(ATT_BUTTON_PIN);
-  
-
+  bool currentState = digitalRead(SW_ATT);
   
   // Se passa da HIGH a LOW (fronti di discesa)
   if (currentState == LOW && lastATTState == HIGH) {

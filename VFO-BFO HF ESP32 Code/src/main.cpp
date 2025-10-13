@@ -1,13 +1,13 @@
 #include <Arduino.h>
 #include "config.h"
 #include "display.h"
-#include "encoder.h"
+#include "VFO_BFO.h" 
 #include "PLL.h"
 #include "bands.h"
 #include "modes.h"
 #include "s_meter.h"
 #include "DigiOUT.h" 
-#include "comand.h"
+#include "functions.h"
 
 
 // Variabili globali
@@ -36,101 +36,86 @@ int encoderCount = 0;
 void setup() {
   Serial.begin(115200);
   delay(1000);
+
   Serial.println("Avvio VFO-BFO...");
 
-  // Configura pulsanti con pull-up interni - AGGIUNGI QUESTE RIGHE
-  pinMode(AGC_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(ATT_BUTTON_PIN, INPUT_PULLUP);
-  
-  // Test lettura iniziale
-  Serial.print("AGC PIN iniziale: ");
-  Serial.println(digitalRead(AGC_BUTTON_PIN) ? "HIGH" : "LOW");
-  Serial.print("ATT PIN iniziale: ");
-  Serial.println(digitalRead(ATT_BUTTON_PIN) ? "HIGH" : "LOW");
+  // Configurazione encoder VFO con pull-up interni 
+  pinMode(VFO_ENC_CLK, INPUT_PULLUP);
+  pinMode(VFO_ENC_DT, INPUT_PULLUP);
+  pinMode(SW_STEP, INPUT_PULLUP);
 
-  // Inizializzazione display PRIMA di tutto
+  // Configura encoder pitch BFO con pull-up interni 
+  pinMode(BFO_ENC_CLK, INPUT_PULLUP);
+  pinMode(BFO_ENC_DT, INPUT_PULLUP);
+
+  // Configura pulsanti con pull-up interni 
+  pinMode(SW_AGC, INPUT_PULLUP);
+  pinMode(SW_ATT, INPUT_PULLUP);
+  pinMode(SW_BAND, INPUT_PULLUP);
+  pinMode(SW_MODE, INPUT_PULLUP);
+
+  // Inizializza display
   Serial.println("Inizializzazione display...");
   tft.init();
   tft.setRotation(1);
   tft.fillScreen(BACKGROUND_COLOR);
+
+  // Inizializza encoder
+  setupEncoders();
   
-  drawDisplayLayout(); // Questo inizializza anche lo sprite
-
-  // DEBUG: Verifica frequenza iniziale
-  Serial.print("Frequenza iniziale - displayedFrequency: ");
-  Serial.println(displayedFrequency);
-  Serial.print("Frequenza iniziale - vfoFrequency: ");
-  Serial.println(vfoFrequency);
-
-  // Inizializzazione DigiOUT - DEVE essere PRIMA di tutto
-  Serial.println("Inizializzazione DigiOUT...");
+  // Inizializza DigiOUT
   setupDigiOUT();
 
-  // Inizializzazione display
-  tft.init();
-  tft.setRotation(1);
-  tft.fillScreen(BACKGROUND_COLOR);
-  
-  drawDisplayLayout();
-  updateFrequencyDisplay();
-  updateStepDisplay();
-  updateBandInfo();
-  updateModeInfo();
-  
-  // Configurazione encoder e pulsanti
-  pinMode(ENC_CLK, INPUT_PULLUP);
-  pinMode(ENC_DT, INPUT_PULLUP);
-  pinMode(ENC_SW, INPUT_PULLUP);
-  pinMode(SW_BAND, INPUT_PULLUP);
-  pinMode(SW_MODE, INPUT_PULLUP);
-
-  // Configura encoder pitch BFO
-  pinMode(BFO_PITCH_CLK, INPUT_PULLUP);
-  pinMode(BFO_PITCH_DT, INPUT_PULLUP);
-
-  // Inizializzazione uscite digitali
-  updateModeOutputs();
-  
-  // Lettura stato iniziale encoder
-  lastEncoded = (digitalRead(ENC_DT) << 1) | digitalRead(ENC_CLK);
-
-  // Inizializzazione SI5351
+  // Inizializza SI5351
   setupSI5351();
+
+  // Disegna layout del display (Anche lo sprite)
+  drawDisplayLayout(); 
+
+  // Aggiorna display frequenza
+  updateFrequencyDisplay();
+
+  // Aggiorna frequenza VFO
   updateFrequency();
 
-  // Inizializzazione DigiOUT - DEVE essere PRIMA di updateBandInfo()
-  updateModeOutputs();
+  // Aggiorna riquadro step
+  updateStepDisplay();
 
-  // Inizializzazione BFO per modalità corrente
-  updateBFOForMode();
-
-  // Aggiorna le informazioni di banda e modalità DOPO l'inizializzazione del DigiOUT
-  updateBandInfo();
+  // Aggiorna riquadro modalità
   updateModeInfo();
 
-  // INIZIALIZZA display AGC/ATT 
+  // Imposta uscite digitali
+  updateModeOutputs();
+  
+  // Aggiorna riquadro banda
+  updateBandInfo();
+
+  // Aggiorna BFO per modalità corrente
+  updateBFOForMode();
+
+  // Aggiorna riquadro AGC
   updateAGCDisplay();
+
+  // Aggiorna riquadro ATT
   updateATTDisplay();
+  
 }
 
 void loop() {
-  readEncoder();
+  readVFOEncoder();
 
+  // Gestione Pitch BFO
   static int lastBFOOffset = 0;
   updateBFOFromEncoder();
   
-  // Aggiorna display se il pitch BFO è cambiato
   if (currentBFOOffset != lastBFOOffset) {
     drawBFODisplay();
     lastBFOOffset = currentBFOOffset;
   }
 
-  // Gestione pulsanti AGC e ATT
-  checkAGCButton();
-  checkATTButton();
   
-  // Cambio step con pulsante encoder
-  if (digitalRead(ENC_SW) == LOW && !buttonPressed) {
+  // Gestione pulsante step (Encoder switch)
+  if (digitalRead(SW_STEP) == LOW && !buttonPressed) {
     if (millis() - lastButtonPress > buttonDebounce) {
       buttonPressed = true;
       changeStep();
@@ -138,13 +123,12 @@ void loop() {
       updateStepDisplay();
       delay(300);
     }
-  }
-  
-  if (digitalRead(ENC_SW) == HIGH && buttonPressed) {
+  }  
+  if (digitalRead(SW_STEP) == HIGH && buttonPressed) {
     buttonPressed = false;
   }
 
-  // Cambio banda con pulsante banda
+  // Gestione pulsante banda
   if (digitalRead(SW_BAND) == LOW && !bandButtonPressed) {
     if (millis() - lastBandButtonPress > buttonDebounce) {
       bandButtonPressed = true;
@@ -155,13 +139,12 @@ void loop() {
       updateBandInfo();
       delay(300);
     }
-  }
-  
+  } 
   if (digitalRead(SW_BAND) == HIGH && bandButtonPressed) {
     bandButtonPressed = false;
   }
 
-  // Cambio modalità con pulsante modalità
+  // Gestione pulsante modalità
   if (digitalRead(SW_MODE) == LOW && !modeButtonPressed) {
     if (millis() - lastModeButtonPress > buttonDebounce) {
       modeButtonPressed = true;
@@ -171,11 +154,16 @@ void loop() {
       updateModeInfo();
       delay(300);
     }
-  }
-  
+  } 
   if (digitalRead(SW_MODE) == HIGH && modeButtonPressed) {
     modeButtonPressed = false;
   }
+
+  // Gestione pulsante AGC
+  checkAGCButton();
+
+  // Gestione pulsante ATT
+  checkATTButton();
 
   // Aggiorna S-meter ogni 100ms
   static unsigned long lastSMeterUpdate = 0;

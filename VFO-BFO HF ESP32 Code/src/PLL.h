@@ -10,8 +10,5 @@ void updateFrequency();
 void updateBFO();
 void enableBFO();
 void disableBFO();
-void updateBFOFromPitch();       // Nuova funzione
-void updateBFOFromEncoder();     // BFO da encoder
-int readBFOEncoder();            // Lettura encoder
 
 #endif

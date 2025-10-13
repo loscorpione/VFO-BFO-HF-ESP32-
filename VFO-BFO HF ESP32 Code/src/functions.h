@@ -1,5 +1,5 @@
-#ifndef COMAND_H
-#define COMAND_H
+#ifndef FUNCTIONS_H
+#define FUNCTIONS_H
 
 // Stati AGC e ATT
 extern bool agcFastMode;
