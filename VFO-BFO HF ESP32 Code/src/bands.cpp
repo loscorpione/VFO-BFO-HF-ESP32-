@@ -36,7 +36,7 @@ void changeBand() {
   currentBandIndex = (currentBandIndex + 1) % totalBands;
   displayedFrequency = bands[currentBandIndex].startFreq;
   vfoFrequency = displayedFrequency - IF_FREQUENCY;
-  updateDigiOUTOutput();// Aggiorna le uscite digitali
+  updateModeOutputs();// Aggiorna le uscite digitali
 }
 
 // Aggiorna la visualizzazione della banda
@@ -61,5 +61,5 @@ void updateBandInfo() {
     lastBandIndex = bandIndex;
   }
    // Aggiorna SEMPRE le uscite digitali quando si aggiorna la banda
-  updateDigiOUTOutput();
+  updateModeOutputs(); ;
 }

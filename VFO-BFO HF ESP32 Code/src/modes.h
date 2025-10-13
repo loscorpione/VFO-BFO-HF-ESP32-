@@ -13,8 +13,7 @@ extern const char* modeNames[];
 extern int currentMode;
 
 void changeMode();
-void updateModeOutputs();
 void updateModeInfo();
-void updateBFOForMode();  // Nuova funzione
+void updateBFOForMode();  
 
 #endif

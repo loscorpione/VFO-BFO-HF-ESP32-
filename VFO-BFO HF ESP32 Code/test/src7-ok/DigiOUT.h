@@ -5,13 +5,8 @@
 
 // Dichiarazione delle variabili globali necessarie
 extern unsigned long displayedFrequency;
-extern int currentMode;
-extern bool agcFastMode;
-extern bool attenuatorEnabled;
 
 void setupDigiOUT();
-void updateModeOutputs();
-void updateAGCState(); 
-void updateATTState();
+void updateDigiOUTOutput();
 
 #endif

@@ -7,6 +7,7 @@
 #include "modes.h"
 #include "s_meter.h"
 #include "DigiOUT.h" 
+#include "comand.h"
 
 
 // Variabili globali
@@ -22,7 +23,7 @@ const int encoderReadInterval = 10;
 unsigned long lastButtonPress = 0;
 unsigned long lastBandButtonPress = 0;
 unsigned long lastModeButtonPress = 0;
-const int buttonDebounce = 200;
+
 bool buttonPressed = false;
 bool bandButtonPressed = false;
 bool modeButtonPressed = false;
@@ -31,10 +32,21 @@ bool modeButtonPressed = false;
 int lastEncoded = 0;
 int encoderCount = 0;
 
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
   Serial.println("Avvio VFO-BFO...");
+
+  // Configura pulsanti con pull-up interni - AGGIUNGI QUESTE RIGHE
+  pinMode(AGC_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(ATT_BUTTON_PIN, INPUT_PULLUP);
+  
+  // Test lettura iniziale
+  Serial.print("AGC PIN iniziale: ");
+  Serial.println(digitalRead(AGC_BUTTON_PIN) ? "HIGH" : "LOW");
+  Serial.print("ATT PIN iniziale: ");
+  Serial.println(digitalRead(ATT_BUTTON_PIN) ? "HIGH" : "LOW");
 
   // Inizializzazione display PRIMA di tutto
   Serial.println("Inizializzazione display...");
@@ -72,9 +84,11 @@ void setup() {
   pinMode(SW_BAND, INPUT_PULLUP);
   pinMode(SW_MODE, INPUT_PULLUP);
 
-  // Configurazione pin output modalità
-  pinMode(MODE_BIT0, OUTPUT);
-  pinMode(MODE_BIT1, OUTPUT);
+  // Configura encoder pitch BFO
+  pinMode(BFO_PITCH_CLK, INPUT_PULLUP);
+  pinMode(BFO_PITCH_DT, INPUT_PULLUP);
+
+  // Inizializzazione uscite digitali
   updateModeOutputs();
   
   // Lettura stato iniziale encoder
@@ -85,7 +99,7 @@ void setup() {
   updateFrequency();
 
   // Inizializzazione DigiOUT - DEVE essere PRIMA di updateBandInfo()
-  setupDigiOUT();
+  updateModeOutputs();
 
   // Inizializzazione BFO per modalità corrente
   updateBFOForMode();
@@ -93,11 +107,28 @@ void setup() {
   // Aggiorna le informazioni di banda e modalità DOPO l'inizializzazione del DigiOUT
   updateBandInfo();
   updateModeInfo();
+
+  // INIZIALIZZA display AGC/ATT 
+  updateAGCDisplay();
+  updateATTDisplay();
 }
 
 void loop() {
   readEncoder();
 
+  static int lastBFOOffset = 0;
+  updateBFOFromEncoder();
+  
+  // Aggiorna display se il pitch BFO è cambiato
+  if (currentBFOOffset != lastBFOOffset) {
+    drawBFODisplay();
+    lastBFOOffset = currentBFOOffset;
+  }
+
+  // Gestione pulsanti AGC e ATT
+  checkAGCButton();
+  checkATTButton();
+  
   // Cambio step con pulsante encoder
   if (digitalRead(ENC_SW) == LOW && !buttonPressed) {
     if (millis() - lastButtonPress > buttonDebounce) {
@@ -153,17 +184,5 @@ void loop() {
     lastSMeterUpdate = millis();
   }
 
-  // Aggiorna display BFO ogni 100ms
-  static unsigned long lastBFOUpdate = 0;
-  if (millis() - lastBFOUpdate > 100) {
-    drawBFODisplay();
-    lastBFOUpdate = millis();
-  }
 
-  // Aggiorna regolazione pitch BFO ogni 100ms (più reattivo)
-  static unsigned long lastPitchUpdate = 0;
-  if (millis() - lastPitchUpdate > 100) {
-    updateBFOFromPitch();
-    lastPitchUpdate = millis();
-  }
 }

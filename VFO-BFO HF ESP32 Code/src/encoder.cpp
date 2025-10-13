@@ -33,7 +33,7 @@ void readEncoder() {
         updateFrequency();
         updateFrequencyDisplay(); // Ora usa lo sprite - ZERO flickering!
         updateBandInfo();
-        updateDigiOUTOutput(); 
+        updateModeOutputs(); 
         encoderCount = 0;
         lastUpdate = micros();
       }
@@ -49,7 +49,7 @@ void readEncoder() {
         updateFrequency();
         updateFrequencyDisplay(); // Ora usa lo sprite - ZERO flickering!
         updateBandInfo();
-        updateDigiOUTOutput(); 
+        updateModeOutputs();
         encoderCount = 0;
         lastUpdate = micros();
       }

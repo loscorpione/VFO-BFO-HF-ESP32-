@@ -15,10 +15,6 @@ void changeMode() {
   updateBFOForMode();
 }
 
-void updateModeOutputs() {
-  digitalWrite(MODE_BIT0, currentMode & 0x01);
-  digitalWrite(MODE_BIT1, (currentMode >> 1) & 0x01);
-}
 
 void updateBFOForMode() {
   // Salva l'offset corrente per la modalità uscente
@@ -42,17 +38,17 @@ void updateBFOForMode() {
       disableBFO();
       break;
     case MODE_LSB:
-      currentBFOOffset = bfoPitchOffset[0];
+      currentBFOOffset = 0;  // ⬅️ RESET A ZERO
       bfoFrequency = BFO_LSB_BASE + currentBFOOffset;
       enableBFO();
       break;
     case MODE_USB:
-      currentBFOOffset = bfoPitchOffset[1];
+      currentBFOOffset = 0;  // ⬅️ RESET A ZERO
       bfoFrequency = BFO_USB_BASE + currentBFOOffset;
       enableBFO();
       break;
     case MODE_CW:
-      currentBFOOffset = bfoPitchOffset[2];
+      currentBFOOffset = 0;  // ⬅️ RESET A ZERO
       bfoFrequency = BFO_CW_BASE + currentBFOOffset;
       enableBFO();
       break;

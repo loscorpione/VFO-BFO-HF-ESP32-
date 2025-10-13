@@ -13,6 +13,11 @@ static String lastFreqStr = "";
 static int lastSpriteWidth = 0;
 static int lastSpriteX = 0;
 
+// Variabili per il BFO
+static bool bfoDisplayInitialized = false;
+static bool lastBFOEnabled = false;
+static unsigned long lastBFOFreq = 0;
+
 // Disegna lo sprite della frequenza
 void setupFrequencySprite() {
   // Crea uno sprite di 250x60 pixel (abbastanza grande per la frequenza)
@@ -24,56 +29,107 @@ void setupFrequencySprite() {
   freqSprite.setTextSize(0);
 }
 
+// Disegna gli elementi statici del BFO
+void drawBFOStaticElements() {
+  tft.fillRect(BFO_DISPLAY_X-60, BFO_DISPLAY_Y, BFO_DISPLAY_WIDTH+75, BFO_DISPLAY_HEIGHT, BACKGROUND_COLOR);
+  
+  // Disegna la scritta "BFO: e kHz"
+  tft.setTextColor(TFT_ORANGE, BACKGROUND_COLOR);
+  tft.setTextSize(2);
+  tft.drawString("BFO:", BFO_DISPLAY_X-60, BFO_DISPLAY_Y+15);
+  tft.drawString("kHz", BFO_DISPLAY_X+BFO_GRAPH_WIDTH-5, BFO_DISPLAY_Y+15);
+  
+  // Disegna il grafico della frequenza BFO
+  tft.drawFastHLine(BFO_GRAPH_X, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT/2, BFO_GRAPH_WIDTH, TFT_WHITE);
+  
+  // Disegna il marcatore centrale (ROSSO) - CORREZIONE
+  int centerX = BFO_GRAPH_X + BFO_GRAPH_WIDTH/2;
+  tft.drawFastVLine(centerX-1, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_RED);
+  tft.drawFastVLine(centerX, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_RED);
+  tft.drawFastVLine(centerX+1, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_RED);
+
+  // Disegna le etichette del grafico
+  tft.setTextColor(TFT_WHITE, BACKGROUND_COLOR);
+  tft.setTextSize(1);
+  tft.setCursor(BFO_GRAPH_X, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 2);
+  tft.print("453");
+  tft.setCursor(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2 - 8, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 2);
+  tft.print("455");
+  tft.setCursor(BFO_GRAPH_X + BFO_GRAPH_WIDTH - 18, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 2);
+  tft.print("457");
+  
+  bfoDisplayInitialized = true;
+}
+
+// Aggiorna solo gli elementi dinamici del BFO
+void updateBFODynamicElements() {
+  if (!bfoEnabled) return;
+  
+  // Pulisci solo l'area della frequenza visualizzata
+  tft.fillRect(BFO_DISPLAY_X, BFO_DISPLAY_Y, BFO_DISPLAY_WIDTH-100, 20, BACKGROUND_COLOR);
+  
+  // Pulisci l'area del grafico (solo la parte del marker verde)
+  // MA mantieni la linea bianca e il marcatore centrale
+  tft.fillRect(BFO_GRAPH_X, BFO_GRAPH_Y, BFO_GRAPH_WIDTH, BFO_GRAPH_HEIGHT, BACKGROUND_COLOR);
+  
+  // Ridisegna la linea orizzontale del grafico
+  tft.drawFastHLine(BFO_GRAPH_X, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT/2, BFO_GRAPH_WIDTH, TFT_WHITE);
+  
+  // Ridisegna il marcatore centrale (ROSSO)
+  int centerX = BFO_GRAPH_X + BFO_GRAPH_WIDTH/2;
+  tft.drawFastVLine(centerX-1, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_RED);
+  tft.drawFastVLine(centerX, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_RED);
+  tft.drawFastVLine(centerX+1, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_RED);
+
+  // Calcola la posizione del marcatore VERDE
+  int markerPos = map(bfoFrequency, 453000, 457000, BFO_GRAPH_X, BFO_GRAPH_X + BFO_GRAPH_WIDTH);
+  markerPos = constrain(markerPos, BFO_GRAPH_X, BFO_GRAPH_X + BFO_GRAPH_WIDTH);
+  
+  // Disegna il marcatore della frequenza BFO (VERDE)
+  tft.drawFastVLine(markerPos-1, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_GREEN);
+  tft.drawFastVLine(markerPos, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_GREEN);
+  tft.drawFastVLine(markerPos+1, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_GREEN);
+  
+  // Visualizza frequenza BFO con 3 cifre decimali - CORREZIONE
+  tft.setTextColor(TFT_ORANGE, BACKGROUND_COLOR);
+  tft.setTextSize(1);
+  //tft.setCursor(BFO_DISPLAY_X+BFO_DISPLAY_WIDTH/2-30, BFO_DISPLAY_Y+5);
+  tft.setCursor(BFO_GRAPH_X+BFO_GRAPH_WIDTH/2-21, BFO_DISPLAY_Y+5);
+
+  // Visualizza frequenza BFO con tutte e 3 le cifre decimali
+  unsigned long khz = bfoFrequency / 1000;
+  unsigned long hz = bfoFrequency % 1000;
+  tft.print(khz);
+  tft.print(".");
+  // Aggiungi zeri iniziali se necessario
+  if (hz < 100) tft.print("0");
+  if (hz < 10) tft.print("0");
+  tft.print(hz);
+}
+
 // Disegna il display BFO
 void drawBFODisplay() {
-  static unsigned long lastBFOFreq = 0;
-  static bool lastBFOEnabled = false;
-  
-  if (abs((long)(bfoFrequency - lastBFOFreq)) > 100 || bfoEnabled != lastBFOEnabled) {
-    tft.fillRect(BFO_DISPLAY_X-60, BFO_DISPLAY_Y, BFO_DISPLAY_WIDTH+60, BFO_DISPLAY_HEIGHT, BACKGROUND_COLOR);
-    
+  // Se il BFO è stato disabilitato o è la prima volta, ridisegna tutto
+  if (!bfoDisplayInitialized || bfoEnabled != lastBFOEnabled) {
     if (bfoEnabled) {
-      // Disegna il grafico della frequenza BFO
-      tft.drawFastHLine(BFO_GRAPH_X, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT/2, BFO_GRAPH_WIDTH, TFT_WHITE);
-
-      // Calcola la posizione del marcatore
-      int markerPos = map(bfoFrequency, 452000, 458000, BFO_GRAPH_X, BFO_GRAPH_X + BFO_GRAPH_WIDTH);
-      markerPos = constrain(markerPos, BFO_GRAPH_X, BFO_GRAPH_X + BFO_GRAPH_WIDTH);
-      
-      // Disegna il marcatore della frequenza BFO
-      tft.drawFastVLine(markerPos, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_GREEN);
-      tft.drawFastVLine(markerPos+1, BFO_GRAPH_Y, BFO_GRAPH_HEIGHT, TFT_GREEN);
-      
-      // Disegna il marcatore centrale
-      tft.drawFastVLine(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2-1, BFO_GRAPH_Y-(BFO_CENTER_MARKER_HEIGHT-BFO_GRAPH_HEIGHT)/2, BFO_CENTER_MARKER_HEIGHT, TFT_RED);
-      //tft.drawFastVLine(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2+1, BFO_GRAPH_Y-(BFO_CENTER_MARKER_HEIGHT-BFO_GRAPH_HEIGHT)/2, BFO_CENTER_MARKER_HEIGHT, TFT_RED);
-      tft.drawFastVLine(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2, BFO_GRAPH_Y-(BFO_CENTER_MARKER_HEIGHT-BFO_GRAPH_HEIGHT)/2, BFO_CENTER_MARKER_HEIGHT, TFT_RED);
-
-      tft.setTextColor(TFT_BLUE, BACKGROUND_COLOR);
-      tft.setTextSize(1);
-      tft.setCursor(BFO_DISPLAY_X+BFO_DISPLAY_WIDTH/2-30, BFO_DISPLAY_Y+5);
-      tft.print(bfoFrequency / 1000.0, 2);
-
-      tft.setTextColor(TFT_BLUE, BACKGROUND_COLOR);
-      tft.setTextSize(2);
-      tft.drawString("BFO:", BFO_DISPLAY_X-60, BFO_DISPLAY_Y+15);
-      
-      // Disegna le etichette del grafico
-      tft.setTextColor(TFT_WHITE, BACKGROUND_COLOR);
-      tft.setTextSize(1);
-      tft.setCursor(BFO_GRAPH_X, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 2);
-      tft.print("452");
-      tft.setCursor(BFO_GRAPH_X + BFO_GRAPH_WIDTH/2 - 8, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 2);
-      tft.print("455");
-      tft.setCursor(BFO_GRAPH_X + BFO_GRAPH_WIDTH - 18, BFO_GRAPH_Y + BFO_GRAPH_HEIGHT + 2);
-      tft.print("458");
+      drawBFOStaticElements();
+      updateBFODynamicElements();
+    } else {
+      // Se il BFO è disabilitato, pulisci l'area
+      tft.fillRect(BFO_DISPLAY_X-60, BFO_DISPLAY_Y, BFO_DISPLAY_WIDTH+75, BFO_DISPLAY_HEIGHT, BACKGROUND_COLOR);
+      bfoDisplayInitialized = false;
     }
-    
-    lastBFOFreq = bfoFrequency;
     lastBFOEnabled = bfoEnabled;
   }
+  
+  // Aggiorna gli elementi dinamici solo se il BFO è abilitato e la frequenza è cambiata
+  if (bfoEnabled && abs((long)(bfoFrequency - lastBFOFreq)) > 0) { // Aggiorna per ogni variazione
+    updateBFODynamicElements();
+    lastBFOFreq = bfoFrequency;
+  }
 }
-// Aggiorna la visualizzazione della frequenza
+
+// Aggiorna la visualizzazione della frequenza VFO
 void updateFrequencyDisplay() {
   String freqStr = formatFrequency(displayedFrequency); 
   
@@ -122,7 +178,7 @@ void updateStepDisplay() {
     tft.setTextColor(STEP_COLOR, BACKGROUND_COLOR);
     tft.setTextSize(2);
     
-    tft.drawString(stepStr, 255, 100);
+    tft.drawString(stepStr, 255, 105);
     lastStepStr = stepStr;
   }
 }
@@ -176,8 +232,9 @@ void drawDisplayLayout() {
   tft.setTextColor(TFT_BLUE, BACKGROUND_COLOR);
   tft.drawString("MHz", 280, 70);
   
-  tft.setTextColor(TFT_RED, BACKGROUND_COLOR);
-  tft.drawString("STEP:", 195, 100);
+  tft.setTextColor(TFT_WHITE, BACKGROUND_COLOR);
+  tft.setTextSize(1);
+  tft.drawString("STEP", 265, 90);
   
   setupSMeter();
   
@@ -206,7 +263,6 @@ void drawDisplayLayout() {
   }
   
   tft.setTextColor(TFT_WHITE, BACKGROUND_COLOR);
-  drawBFODisplay();
   
   // Inizializza la visualizzazione della frequenza
   lastFreqStr = ""; // Forza l'aggiornamento iniziale
