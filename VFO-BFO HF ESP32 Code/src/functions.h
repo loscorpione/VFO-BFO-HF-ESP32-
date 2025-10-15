@@ -1,6 +1,7 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
+
 // Stati AGC e ATT
 extern bool agcFastMode;
 extern bool attenuatorEnabled;

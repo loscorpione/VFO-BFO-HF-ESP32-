@@ -27,6 +27,12 @@
 // Frequenza IF del ricevitore
 #define IF_FREQUENCY 455000        // IF=455kHz
 
+// Display VFO
+#define VFO_DISPLAY_X 15          // Posizione X del display VFO
+#define VFO_DISPLAY_Y 30         // Posizione Y del display VFO
+#define VFO_LABEL_SIZE 2
+#define VFO_LABEL_COLOR TFT_SKYBLUE
+
 // Frequenze BFO base (con offset di 1.5kHz)
 #define BFO_USB_BASE 453500       // BFO per USB (IF 455kHz - offset 1.5kHz)
 #define BFO_LSB_BASE 456500       // BFO per LSB (IF 455kHz + offset 1.5kHz)
@@ -38,20 +44,29 @@
 #define BFO_PITCH_STEP 5          // 5Hz per click
 
 // Display BFO
-#define BFO_DISPLAY_X 70          // Posizione X del display BFO
-#define BFO_DISPLAY_Y 102         // Posizione Y del display BFO
+#define BFO_DISPLAY_X 80         // Posizione X del display BFO
+#define BFO_DISPLAY_Y 98         // Posizione Y del display BFO
 #define BFO_DISPLAY_WIDTH 120     // Larghezza display BFO
 #define BFO_DISPLAY_HEIGHT 40     // Altezza display BFO
 #define BFO_GRAPH_WIDTH 100       // Larghezza grafico
 #define BFO_GRAPH_HEIGHT 12       // Altezza grafico
-#define BFO_GRAPH_X 58            // Posizione X grafico
-#define BFO_GRAPH_Y 120           // Posizione Y grafico
+#define BFO_GRAPH_X 73            // Posizione X grafico
+#define BFO_GRAPH_Y 115           // Posizione Y grafico
 #define BFO_MARKER_HEIGHT 10      // Altezza linea verticale
 #define BFO_CENTER_MARKER_HEIGHT 12 // Altezza marcatore centrale
+#define BFO_LABEL_COLOR TFT_SKYBLUE // Colore etichetta BFO
 
-// S-Meter - Pin e configurazione
+//Display STEP
+#define STEP_BOX_X 250
+#define STEP_BOX_Y 102
+#define STEP_BOX_WIDTH 70
+#define STEP_BOX_HEIGHT 40
+#define STEP_BOX_TEXT_COLOR TFT_RED
+#define STEP_BOX_TEXT_SIZE 1
+
+// S-Meter - Pin e configurazione 
 #define S_METER_PIN 15            // Pin analogico per il S-meter
-#define S_METER_X 10              // Posizione X
+#define S_METER_X 15              // Posizione X
 #define S_METER_Y 160             // Posizione Y
 #define S_METER_WIDTH 300         // Larghezza totale
 #define S_METER_HEIGHT 15         // Altezza
@@ -64,12 +79,12 @@
 #define S_METER_BG_COLOR TFT_DARKGREY
 
 // Posizione riquadri (banda, modalità, AGC, ATT) 
-#define POSITION_X 8              // Posizione X
+#define POSITION_X 10              // Posizione X
 #define POSITION_Y 200            // Posizione Y
 #define BOX_NUM 4                 // Numero di riquadri
 #define BOX_WIDTH 70              // Larghezza di ogni riquadro
 #define BOX_HEIGHT 40             // Altezza di ogni riquadro
-#define BOX_SPACING 8             // Spaziatura tra i riquadri
+#define BOX_SPACING 10            // Spaziatura tra i riquadri
 #define BOX_RADIUS 5              // Raggio angoli arrotondati
 #define TEXT_SIZE 2               // Dimensione testo riquadri
 #define TEXT_SIZE_TITLE 1         // Dimensione testo etichette
@@ -77,17 +92,26 @@
 // Colori personalizzati
 #define FREQUENCY_COLOR TFT_GREEN // Colore frequenza
 #define STEP_COLOR TFT_RED        // Colore step
-#define BAND_COLOR TFT_CYAN       // Colore banda
+#define BAND_COLOR TFT_SKYBLUE       // Colore banda
 #define MODE_COLOR TFT_YELLOW     // Colore modalità
 #define BACKGROUND_COLOR TFT_BLACK// Colore sfondo
 #define BORDER_COLOR TFT_WHITE    // Colore bordo
+
+// Indirizzo I2C della 24LC32
+#define EXTERNAL_EEPROM_ADDRESS 0x50
+#define EEPROM_SIZE 4096
+
+// Timing salvataggio
+#define EEPROM_SAVE_DELAY 3000     // Salva dopo 3 secondi di inattività
+#define EEPROM_QUICK_SAVE_DELAY 500 // Salvataggio rapido per cambi importanti
 
 // Debounce per tutti i pulsanti
 const int buttonDebounce = 200;
 
 // Variabili globali 
 extern unsigned long vfoFrequency;          // Frequenza VFO + IF
-extern unsigned long displayedFrequency;    // Frequenza visualizzata (VFO + IF)
+extern unsigned long displayedFrequency;    // Frequenza visualizzata (VFO + IF) 
+extern int currentMode;                     // Modalità corrente
 extern unsigned long step;                  // Passo VFO
 extern unsigned long minFreq;               // Frequenza minima di sintonia
 extern unsigned long maxFreq;               // Frequenza massima di sintonia

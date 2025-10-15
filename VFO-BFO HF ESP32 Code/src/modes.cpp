@@ -64,17 +64,24 @@ void updateModeInfo() {
   static int lastBFOOffset = 0;
   
   if (currentMode != lastMode || bfoEnabled != lastBFOState || currentBFOOffset != lastBFOOffset) {
-    int Pos_X;
-    if (currentMode == MODE_AM) Pos_X= 112;
-    else if (currentMode == MODE_LSB) Pos_X= 106;
-    else if (currentMode == MODE_USB) Pos_X= 106;
-    else if (currentMode == MODE_CW) Pos_X= 112;
+    // Calcola la posizione del riquadro MODE (secondo riquadro)
+    int boxX = POSITION_X + (BOX_WIDTH + BOX_SPACING);
+    int boxWidth = BOX_WIDTH;
     
-    tft.fillRect(100, 218, 47, 15, BACKGROUND_COLOR);
-    tft.setTextFont(1);
+    // Pulisci l'area del testo
+    tft.fillRect(boxX + 5, 218, boxWidth - 10, 15, BACKGROUND_COLOR);
+    
     tft.setTextColor(MODE_COLOR, BACKGROUND_COLOR);
     tft.setTextSize(2);
-    tft.drawString(modeNames[currentMode], Pos_X, 218);
+    
+    String modeText = modeNames[currentMode];
+    
+    // Calcola la posizione X centrata approssimativa
+    int textWidth = modeText.length() * 12;
+    int centeredX = boxX + (boxWidth - textWidth) / 2;
+    
+    // Disegna il testo centrato
+    tft.drawString(modeText, centeredX, 218);
     
     lastMode = currentMode;
     lastBFOState = bfoEnabled;

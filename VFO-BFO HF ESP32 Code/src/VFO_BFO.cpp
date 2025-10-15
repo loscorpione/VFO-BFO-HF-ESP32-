@@ -1,4 +1,4 @@
-// VFO_BFO.cpp
+
 #include "VFO_BFO.h"
 #include "config.h"
 #include "bands.h"
@@ -6,6 +6,7 @@
 #include "display.h"
 #include "PLL.h"
 #include "DigiOUT.h"
+#include "EEPROM_manager.h"
 #include <Arduino.h>
 
 // Variabili globali esterne
@@ -54,6 +55,8 @@ void readVFOEncoder() {
         updateModeOutputs(); 
         encoderCount = 0;
         lastUpdate = micros();
+
+        eepromManager.requestSave(); // Salvataggio ritardato per VFO
       }
     }
   }
@@ -70,6 +73,8 @@ void readVFOEncoder() {
         updateModeOutputs();
         encoderCount = 0;
         lastUpdate = micros();
+
+        eepromManager.requestSave(); // Salvataggio ritardato per VFO
       }
     }
   }

@@ -34,7 +34,7 @@ void setupSMeter() {
   // Disegna le etichette
   tft.setTextColor(TFT_WHITE, BACKGROUND_COLOR);
   tft.setTextSize(1);
-  tft.drawString("S-METER", S_METER_X, S_METER_Y - 10);
+  tft.drawString("S-METER", S_METER_X, S_METER_Y - 13);
 }
 
 void drawSMeterSegment(int segment, bool state) {
@@ -84,7 +84,7 @@ void updateSMeter() {
     if (sMeterValue != previousSValue) {
       // Spegni i segmenti in eccesso
       if (sMeterValue < previousSValue) {
-        for (int i = previousSValue; i > sMeterValue; i--) {
+        for (int i = previousSValue; i > sMeterValue-1; i--) {
           drawSMeterSegment(i, false);
         }
       } 
@@ -104,23 +104,25 @@ void updateSMeter() {
     sMeterPeak = sMeterValue;
     lastPeakUpdate = millis();
     
-    // Aggiorna immediatamente l'indicatore di picco
+  // Aggiorna immediatamente l'indicatore di picco
     static int previousPeak = -1;
     if (previousPeak > 0 && previousPeak <= S_METER_SEGMENTS) {
       int oldPeakX = S_METER_X + (previousPeak * S_METER_SEGMENT_WIDTH) - (S_METER_SEGMENT_WIDTH );
-      tft.fillRect(oldPeakX, S_METER_Y - 3, S_METER_SEGMENT_WIDTH-1, 3, BACKGROUND_COLOR); // Cancella il vecchio picco
+      tft.fillRect(oldPeakX, S_METER_Y + S_METER_SEGMENT_WIDTH+3, S_METER_SEGMENT_WIDTH-1, 3, BACKGROUND_COLOR); // Cancella il vecchio picco
+      tft.fillRect(oldPeakX, S_METER_Y -3, S_METER_SEGMENT_WIDTH-1, 3, BACKGROUND_COLOR); // Cancella il vecchio picco
     }
     
     if (sMeterPeak > 0 && sMeterPeak <= S_METER_SEGMENTS) {
       int peakX = S_METER_X + (sMeterPeak * S_METER_SEGMENT_WIDTH) - (S_METER_SEGMENT_WIDTH );
-      tft.fillRect(peakX, S_METER_Y - 3, S_METER_SEGMENT_WIDTH-1, 3, TFT_WHITE); // Disegna il nuovo picco
+      tft.fillRect(peakX, S_METER_Y + S_METER_SEGMENT_WIDTH+3, S_METER_SEGMENT_WIDTH-1, 3, TFT_WHITE); // Disegna il nuovo picco
+      tft.fillRect(peakX, S_METER_Y -3, S_METER_SEGMENT_WIDTH-1, 3, TFT_WHITE); // Disegna il nuovo picco
     }
     
     previousPeak = sMeterPeak;
   }
 
-  // Reset del picco dopo 200 millisecondi
-  if (millis() - lastPeakUpdate > 200) {
+  // Reset del picco dopo 150 millisecondi
+  if (millis() - lastPeakUpdate > 150) {
     sMeterPeak = max(0, sMeterPeak - 1);
     lastPeakUpdate = millis();
   }

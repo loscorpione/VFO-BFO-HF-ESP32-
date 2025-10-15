@@ -41,25 +41,36 @@ void changeBand() {
 
 // Aggiorna la visualizzazione della banda
 void updateBandInfo() {
-  static int lastBandIndex = -1; // Memorizza l'ultima banda visualizzata
+  static int lastBandIndex = -1;
   
   int bandIndex = getBandIndex(displayedFrequency);
   
-  // Aggiorna solo se la banda è cambiata
   if (bandIndex != lastBandIndex) {
-    tft.fillRect(25, 218, 35, 15, BACKGROUND_COLOR);
+    int boxX = POSITION_X;
+    int boxWidth = BOX_WIDTH;
+    
+    // Pulisci l'area del testo
+    tft.fillRect(boxX + 5, 218, boxWidth - 10, 15, BACKGROUND_COLOR);
+    
     tft.setTextColor(BAND_COLOR, BACKGROUND_COLOR);
     tft.setTextSize(2);
     
     if (bandIndex >= 0) {
-      tft.drawString(bands[bandIndex].name, 25, 218);
+      String bandName = bands[bandIndex].name;
+      
+      // Calcola la posizione X centrata approssimativa
+      int textWidth = bandName.length() * 12;
+      int centeredX = boxX + (boxWidth - textWidth) / 2;
+      
+      // Disegna il testo centrato
+      tft.drawString(bandName, centeredX, 218);
       currentBandIndex = bandIndex;
     } else {
-      tft.drawString("    ", 25, 218);
+      tft.drawString("    ", boxX + 5, 218);
     }
     
     lastBandIndex = bandIndex;
   }
-   // Aggiorna SEMPRE le uscite digitali quando si aggiorna la banda
-  updateModeOutputs(); ;
+  
+  updateModeOutputs();
 }

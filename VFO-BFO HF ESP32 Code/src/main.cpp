@@ -1,14 +1,14 @@
 #include <Arduino.h>
 #include "config.h"
 #include "display.h"
-#include "VFO_BFO.h" 
+#include "VFO_BFO.h"
 #include "PLL.h"
 #include "bands.h"
 #include "modes.h"
 #include "s_meter.h"
 #include "DigiOUT.h" 
 #include "functions.h"
-
+#include "EEPROM_manager.h"
 
 // Variabili globali
 unsigned long vfoFrequency = 7000000 + IF_FREQUENCY;
@@ -32,12 +32,9 @@ bool modeButtonPressed = false;
 int lastEncoded = 0;
 int encoderCount = 0;
 
-
 void setup() {
   Serial.begin(115200);
   delay(1000);
-
-  Serial.println("Avvio VFO-BFO...");
 
   // Configurazione encoder VFO con pull-up interni 
   pinMode(VFO_ENC_CLK, INPUT_PULLUP);
@@ -55,10 +52,16 @@ void setup() {
   pinMode(SW_MODE, INPUT_PULLUP);
 
   // Inizializza display
-  Serial.println("Inizializzazione display...");
   tft.init();
   tft.setRotation(1);
   tft.fillScreen(BACKGROUND_COLOR);
+
+  // Inizializza EEPROM e carica configurazione
+  eepromManager.begin();
+  eepromManager.loadRXState();
+
+  // Calcola vfoFrequency
+  vfoFrequency = displayedFrequency + IF_FREQUENCY;
 
   // Inizializza encoder
   setupEncoders();
@@ -69,36 +72,18 @@ void setup() {
   // Inizializza SI5351
   setupSI5351();
 
-  // Disegna layout del display (Anche lo sprite)
+  // Disegna layout del display
   drawDisplayLayout(); 
 
-  // Aggiorna display frequenza
+  // Aggiorna tutti i display
   updateFrequencyDisplay();
-
-  // Aggiorna frequenza VFO
   updateFrequency();
-
-  // Aggiorna riquadro step
   updateStepDisplay();
-
-  // Aggiorna riquadro modalità
   updateModeInfo();
-
-  // Imposta uscite digitali
   updateModeOutputs();
-  
-  // Aggiorna riquadro banda
   updateBandInfo();
-
-  // Aggiorna BFO per modalità corrente
-  updateBFOForMode();
-
-  // Aggiorna riquadro AGC
   updateAGCDisplay();
-
-  // Aggiorna riquadro ATT
   updateATTDisplay();
-  
 }
 
 void loop() {
@@ -113,14 +98,14 @@ void loop() {
     lastBFOOffset = currentBFOOffset;
   }
 
-  
-  // Gestione pulsante step (Encoder switch)
+  // Gestione pulsante step
   if (digitalRead(SW_STEP) == LOW && !buttonPressed) {
     if (millis() - lastButtonPress > buttonDebounce) {
       buttonPressed = true;
       changeStep();
       lastButtonPress = millis();
       updateStepDisplay();
+      eepromManager.requestQuickSave();
       delay(300);
     }
   }  
@@ -137,6 +122,7 @@ void loop() {
       updateFrequency();
       updateFrequencyDisplay();
       updateBandInfo();
+      eepromManager.requestQuickSave();
       delay(300);
     }
   } 
@@ -152,6 +138,7 @@ void loop() {
       lastModeButtonPress = millis();
       updateModeOutputs();
       updateModeInfo();
+      eepromManager.requestQuickSave();
       delay(300);
     }
   } 
@@ -172,5 +159,6 @@ void loop() {
     lastSMeterUpdate = millis();
   }
 
-
+  // Gestione salvataggio EEPROM
+  eepromManager.update();
 }

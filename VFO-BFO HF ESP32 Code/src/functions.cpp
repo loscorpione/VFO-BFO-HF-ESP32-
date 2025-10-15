@@ -2,6 +2,7 @@
 #include "config.h"
 #include "DigiOUT.h"
 #include "display.h"
+#include "EEPROM_manager.h"
 #include <TFT_eSPI.h>
 
 extern TFT_eSPI tft;
@@ -27,13 +28,24 @@ void updateAGC() {
 }
 
 void updateAGCDisplay() {
-  // Aggiorna solo il display AGC
-  tft.fillRect(POSITION_X + 2*(BOX_WIDTH + BOX_SPACING) + 5, POSITION_Y + 20, 
-               BOX_WIDTH - 10, 15, BACKGROUND_COLOR);
+  // Calcola la posizione del riquadro AGC (terzo riquadro)
+  int boxX = POSITION_X + 2 * (BOX_WIDTH + BOX_SPACING);
+  int boxWidth = BOX_WIDTH;
+  
+  // Pulisci l'area del testo
+  tft.fillRect(boxX + 5, POSITION_Y + 18, boxWidth - 10, 15, BACKGROUND_COLOR);
+  
   tft.setTextColor(agcFastMode ? TFT_GREEN : TFT_YELLOW, BACKGROUND_COLOR);
   tft.setTextSize(2);
-  tft.setCursor(POSITION_X + 2*(BOX_WIDTH + BOX_SPACING) + 12, POSITION_Y + 18);
-  tft.print(agcFastMode ? "FAST" : "SLOW");
+  
+  String agcText = agcFastMode ? "FAST" : "SLOW";
+  
+  // Calcola la posizione X centrata approssimativa
+  int textWidth = agcText.length() * 12;
+  int centeredX = boxX + (boxWidth - textWidth) / 2;
+  
+  // Disegna il testo centrato
+  tft.drawString(agcText, centeredX, POSITION_Y + 18);
 }
 
 void checkAGCButton() {
@@ -71,13 +83,25 @@ void updateATT() {
 }
 
 void updateATTDisplay() {
-  // Aggiorna solo il display ATT
-  tft.fillRect(POSITION_X + 3*(BOX_WIDTH + BOX_SPACING) + 5, POSITION_Y + 18, 
-               BOX_WIDTH - 10, 15, BACKGROUND_COLOR);
+  // Calcola la posizione del riquadro ATT (quarto riquadro)
+  int boxX = POSITION_X + 3 * (BOX_WIDTH + BOX_SPACING);
+  int boxWidth = BOX_WIDTH;
+  
+  // Pulisci l'area del testo
+  tft.fillRect(boxX + 5, POSITION_Y + 18, boxWidth - 10, 15, BACKGROUND_COLOR);
+  
   tft.setTextColor(attenuatorEnabled ? TFT_RED : TFT_WHITE, BACKGROUND_COLOR);
   tft.setTextSize(2);
-  tft.setCursor(POSITION_X + 3*(BOX_WIDTH + BOX_SPACING) + 8, POSITION_Y + 18);
-  tft.print(attenuatorEnabled ? "-20dB" : "0dB");
+  
+  String attText = attenuatorEnabled ? "-20dB" : "0dB";
+  
+  // Calcola la posizione X centrata approssimativa
+  // Per testo size 2: circa 12 pixel per carattere
+  int textWidth = attText.length() * 12;
+  int centeredX = boxX + (boxWidth - textWidth) / 2;
+  
+  // Disegna il testo centrato
+  tft.drawString(attText, centeredX, POSITION_Y + 18);
 }
 
 void checkATTButton() {
