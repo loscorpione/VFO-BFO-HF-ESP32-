@@ -10,5 +10,6 @@ void updateFrequency();
 void updateBFO();
 void enableBFO();
 void disableBFO();
+void calibrateSI5351(long calibration_factor);
 
 #endif

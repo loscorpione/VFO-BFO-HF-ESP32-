@@ -9,7 +9,7 @@
 #define SW_MODE 25                  // Pulsante cambio modalità
 #define SW_AGC  26                  // Pulsante AGC Fast/Slow
 #define SW_ATT  27                  // Pulsante Attenuatore -20dB
-#define BFO_ENC_CLK 14              // Pin CLK dell'encoder BFO
+#define BFO_ENC_CLK 13              // Pin CLK dell'encoder BFO
 #define BFO_ENC_DT  12              // Pin DT dell'encoder BFO
 
 // Configurazione I2C GPIO
@@ -121,5 +121,5 @@ extern int bfoPitchOffset[];                // Offset BFO iniziale per ogni moda
 extern int currentBFOOffset;                // Offset BFO corrente
 extern bool agcFastMode;                    // Stati AGC: true = Fast, false = Slow
 extern bool attenuatorEnabled;              // Stati ATT: true = -20dB attivo false = disattivato
-
+extern long si5351Calibration;           // Fattore di calibrazione SI5351
 #endif

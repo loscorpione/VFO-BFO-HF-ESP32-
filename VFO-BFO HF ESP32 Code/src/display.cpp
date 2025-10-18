@@ -277,7 +277,7 @@ void drawBFODisplay() {
       updateBFODynamicElements();
     } else {
       // Se il BFO è disabilitato, pulisci l'area
-      tft.fillRect(BFO_DISPLAY_X-60, BFO_DISPLAY_Y, BFO_DISPLAY_WIDTH+75, BFO_DISPLAY_HEIGHT, BACKGROUND_COLOR);
+      tft.fillRect(BFO_DISPLAY_X-60, BFO_DISPLAY_Y, BFO_DISPLAY_WIDTH+80, BFO_DISPLAY_HEIGHT, BACKGROUND_COLOR);
       bfoDisplayInitialized = false;
     }
     lastBFOEnabled = bfoEnabled;

@@ -5,6 +5,8 @@
 
 Si5351 si5351;
 
+// Variabile per calibrazione
+long si5351Calibration = 0;
 
 // Variabili per stato BFO
 bool bfoEnabled = false;
@@ -30,6 +32,11 @@ void setupSI5351() {
   si5351.drive_strength(SI5351_CLK1, SI5351_DRIVE_8MA);
   si5351.output_enable(SI5351_CLK0, 1);
   si5351.output_enable(SI5351_CLK1, 0); 
+
+  // Applica calibrazione se presente
+  if (si5351Calibration != 0) {
+    si5351.set_correction(si5351Calibration, SI5351_PLL_INPUT_XO);
+  }
 }
 
 // Aggiorna frequenza VFO
@@ -54,4 +61,19 @@ void enableBFO() {
 void disableBFO() {
   bfoEnabled = false;
   si5351.output_enable(SI5351_CLK1, 0);
+}
+
+// Calibrazione SI5351
+void calibrateSI5351(long calibration_factor) {
+  si5351Calibration = calibration_factor;
+  si5351.set_correction(calibration_factor, SI5351_PLL_INPUT_XO);
+  
+  // Riapplica le frequenze correnti
+  updateFrequency();
+  if (bfoEnabled) {
+    updateBFO();
+  }
+  
+  Serial.print("SI5351 calibrato con fattore: ");
+  Serial.println(calibration_factor);
 }

@@ -142,6 +142,27 @@ bool EEPROMManager::saveConfig(const RXConfig& config) {
     return write(EEPROM_CONFIG_START, (uint8_t*)&configToSave, sizeof(RXConfig));
 }
 
+bool EEPROMManager::saveCalibration(int32_t calibration_factor) {
+    uint32_t timestamp = millis();
+    uint8_t data[12];
+    
+    memcpy(data, &calibration_factor, 4);
+    memset(data + 4, 0, 4);
+    memcpy(data + 8, &timestamp, 4);
+    
+    return write(EEPROM_CALIBRATION, data, 12);
+}
+
+bool EEPROMManager::loadCalibration(int32_t& calibration_factor) {
+    uint8_t data[12];
+    
+    if (!read(EEPROM_CALIBRATION, data, 12)) {
+        return false;
+    }
+    
+    memcpy(&calibration_factor, data, 4);
+    return true;
+}
 
 bool EEPROMManager::saveMemory(uint8_t slot, const MemoryChannel& memory) {
     if (slot >= 10) {
@@ -265,47 +286,4 @@ void EEPROMManager::setDefaultRXConfig() {
 
 RXConfig& EEPROMManager::getCurrentRXConfig() {
     return currentConfig;
-}
-
-// ==================== FUNZIONI DI CALIBRAZIONE SI5351 ====================
-
-bool EEPROMManager::saveCalibration(long calibration_factor) {
-    uint32_t timestamp = millis();
-    uint8_t data[12];
-    
-    memcpy(data, &calibration_factor, 4);
-    memset(data + 4, 0, 4); // Riservato per futuro uso
-    memcpy(data + 8, &timestamp, 4);
-    
-    bool success = write(EEPROM_CALIBRATION, data, 12);
-    
-    if (success) {
-        Serial.print("Calibrazione salvata: ");
-        Serial.println(calibration_factor);
-    } else {
-        Serial.println("Errore salvataggio calibrazione");
-    }
-    
-    return success;
-}
-
-bool EEPROMManager::loadCalibration(long& calibration_factor) {
-    uint8_t data[12];
-    
-    if (!read(EEPROM_CALIBRATION, data, 12)) {
-        Serial.println("Nessuna calibrazione trovata in EEPROM");
-        return false;
-    }
-    
-    memcpy(&calibration_factor, data, 4);
-    uint32_t timestamp;
-    memcpy(&timestamp, data + 8, 4);
-    
-    Serial.print("Calibrazione caricata: ");
-    Serial.print(calibration_factor);
-    Serial.print(" (salvata: ");
-    Serial.print(timestamp);
-    Serial.println(" ms)");
-    
-    return true;
 }

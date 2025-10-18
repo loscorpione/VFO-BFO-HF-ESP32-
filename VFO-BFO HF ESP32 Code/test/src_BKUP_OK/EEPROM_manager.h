@@ -42,13 +42,11 @@ struct RXConfig {
 // Dichiarazioni delle funzioni
 class EEPROMManager {
 public:
-    
-    // Funzioni di base
     void begin();
     bool saveConfig(const RXConfig& config);
     bool loadConfig(RXConfig& config);
-    bool saveCalibration(long calibration_factor);
-    bool loadCalibration(long& calibration_factor);
+    bool saveCalibration(int32_t calibration_factor);
+    bool loadCalibration(int32_t& calibration_factor);
     bool saveMemory(uint8_t slot, const MemoryChannel& memory);
     bool loadMemory(uint8_t slot, MemoryChannel& memory);
     bool formatEEPROM();
@@ -59,12 +57,11 @@ public:
     void update();
     bool isSavePending();
     
-    // funzioni per gestione stato RX
+    // FUNZIONI RINOMINATE CON PREFISSO RX
     bool loadRXState();
     void saveRXState();
     void setDefaultRXConfig();
     RXConfig& getCurrentRXConfig();
-
     
 private:
     bool write(uint16_t address, const uint8_t* data, uint16_t len);
