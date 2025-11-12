@@ -38,9 +38,6 @@ bool modeButtonPressed = false;
 int lastEncoded = 0;
 int encoderCount = 0;
 
-// Variabile per calibrazione
-//int32_t currentCalibration = 0;
-
 // Funzione per gestire comandi seriali
 void handleSerialCommands() {
     if (Serial.available() > 0) {
