@@ -1,4 +1,4 @@
-26156476331383419
+26165316443964166
 -Connector_coaxial
 BNC_PanelMountable_Vertical
 Panel-mountable BNC connector mounted through PCB, vertical
@@ -69,6 +69,13 @@ XCVR_ESP32-S3-DEVKITC-1-N8R2
 0
 44
 44
+-Heatsink_other
+Heatsink_Assmann_V6560X_29.4X12
+Heatsink, 29,4mm x 12mm, 2x Fixation 2.2mm Drill, Soldering, V6560X
+Heatsink TO-220
+0
+2
+1
 -Heatsink_other
 Heatsink_Fischer_SK104-STC-STIC_35x13mm_2xDrill2.5mm
 Heatsink, 35mm x 13mm, 2x Fixation 2,5mm Drill, Soldering, Fischer SK104-STC-STIC,
@@ -167,6 +174,20 @@ Si5351
 0
 4
 4
+-RF Components
+LT455GW
+
+Ceramic filter
+0
+5
+5
+-RF Components
+TR TOKO 10x10
+
+
+0
+7
+7
 -Raspeberry_module
 Raspberry_Pi_Pico_AddOn
 Raspberry Pi Pico (W) Add-On Board
@@ -265,10 +286,24 @@ BV 030-7079 OL
 0
 8
 8
+-Transformer
+TR TOKO 10x10
+
+
+0
+7
+7
 -Trimmer
 Potentiometer_Piher_PT-10-V10_Vertical
 Potentiometer, vertical, Piher PT-10-V10, http://www.piher-nacesa.com/pdf/12-PT10v03.pdf
 Potentiometer vertical Piher PT-10-V10
+0
+3
+3
+-Trimmer
+Potentiometer_Runtron_RM-065_Vertical
+Potentiometer, vertical, Trimmer, RM-065 https://components101.com/sites/default/files/component_datasheet/Preset%20Potentiometer%20%28Trimpot%29.pdf
+Potentiometer Trimmer RM-065
 0
 3
 3

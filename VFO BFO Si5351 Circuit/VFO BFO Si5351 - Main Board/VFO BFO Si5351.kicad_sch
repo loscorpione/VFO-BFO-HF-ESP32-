@@ -6001,7 +6001,7 @@
 	)
 	(wire
 		(pts
-			(xy 110.998 101.092) (xy 110.998 104.902)
+			(xy 114.046 101.092) (xy 114.046 104.902)
 		)
 		(stroke
 			(width 0)
@@ -6161,7 +6161,7 @@
 	)
 	(wire
 		(pts
-			(xy 57.912 100.584) (xy 57.912 104.394)
+			(xy 61.976 100.584) (xy 61.976 104.394)
 		)
 		(stroke
 			(width 0)
@@ -6531,7 +6531,7 @@
 	)
 	(wire
 		(pts
-			(xy 55.372 98.044) (xy 57.912 98.044)
+			(xy 55.372 98.044) (xy 61.976 98.044)
 		)
 		(stroke
 			(width 0)
@@ -6571,7 +6571,7 @@
 	)
 	(wire
 		(pts
-			(xy 108.458 98.552) (xy 110.998 98.552)
+			(xy 108.458 98.552) (xy 114.046 98.552)
 		)
 		(stroke
 			(width 0)
@@ -8409,7 +8409,7 @@
 		(dnp no)
 		(uuid "18f8fd8b-7846-4738-9d11-13a5542542e3")
 		(property "Reference" "U5"
-			(at 176.1333 89.408 0)
+			(at 176.022 90.932 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8488,7 +8488,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 57.912 104.394 0)
+		(at 61.976 104.394 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -8497,7 +8497,7 @@
 		(fields_autoplaced yes)
 		(uuid "1a98f822-548c-4f39-9881-2e5c7fbf7393")
 		(property "Reference" "#PWR013"
-			(at 57.912 110.744 0)
+			(at 61.976 110.744 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8506,7 +8506,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 57.912 109.474 0)
+			(at 61.976 109.474 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8514,7 +8514,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 57.912 104.394 0)
+			(at 61.976 104.394 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8523,7 +8523,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 57.912 104.394 0)
+			(at 61.976 104.394 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8532,7 +8532,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 57.912 104.394 0)
+			(at 61.976 104.394 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8686,7 +8686,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 110.998 104.902 0)
+		(at 114.046 104.902 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -8695,7 +8695,7 @@
 		(fields_autoplaced yes)
 		(uuid "21d9e159-d580-4911-8f9f-b5e25fc00cea")
 		(property "Reference" "#PWR024"
-			(at 110.998 111.252 0)
+			(at 114.046 111.252 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8704,7 +8704,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 110.998 109.982 0)
+			(at 114.046 109.982 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8712,7 +8712,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 110.998 104.902 0)
+			(at 114.046 104.902 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8721,7 +8721,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 110.998 104.902 0)
+			(at 114.046 104.902 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8730,7 +8730,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 110.998 104.902 0)
+			(at 114.046 104.902 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9918,7 +9918,7 @@
 	)
 	(symbol
 		(lib_id "Connector:Conn_01x02_Socket")
-		(at 116.078 98.552 0)
+		(at 119.126 98.552 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -9927,7 +9927,7 @@
 		(fields_autoplaced yes)
 		(uuid "38b51adb-4f6e-4006-b5de-ed9418b266d5")
 		(property "Reference" "J8"
-			(at 117.094 98.5519 0)
+			(at 120.142 98.5519 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9936,7 +9936,7 @@
 			)
 		)
 		(property "Value" "IN RTTY"
-			(at 117.094 101.0919 0)
+			(at 120.142 101.0919 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9945,7 +9945,7 @@
 			)
 		)
 		(property "Footprint" "Connector_JST:JST_EH_B2B-EH-A_1x02_P2.50mm_Vertical"
-			(at 116.078 98.552 0)
+			(at 119.126 98.552 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9954,7 +9954,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 116.078 98.552 0)
+			(at 119.126 98.552 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9963,7 +9963,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated"
-			(at 116.078 98.552 0)
+			(at 119.126 98.552 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10255,7 +10255,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 52.578 188.214 0)
+		(at 52.578 187.198 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -10264,7 +10264,7 @@
 		(fields_autoplaced yes)
 		(uuid "5293227d-efcd-4df9-8e7b-7ad657367711")
 		(property "Reference" "#PWR016"
-			(at 52.578 194.564 0)
+			(at 52.578 193.548 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10273,7 +10273,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 52.578 193.294 0)
+			(at 52.578 192.278 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10281,7 +10281,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 52.578 188.214 0)
+			(at 52.578 187.198 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10290,7 +10290,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 52.578 188.214 0)
+			(at 52.578 187.198 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10299,7 +10299,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 52.578 188.214 0)
+			(at 52.578 187.198 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10456,7 +10456,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 102.616 188.468 0)
+		(at 102.616 187.198 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -10465,7 +10465,7 @@
 		(fields_autoplaced yes)
 		(uuid "60be5d51-5f8a-4006-ba72-08217fe01545")
 		(property "Reference" "#PWR023"
-			(at 102.616 194.818 0)
+			(at 102.616 193.548 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10474,7 +10474,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 102.616 193.548 0)
+			(at 102.616 192.278 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10482,7 +10482,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 102.616 188.468 0)
+			(at 102.616 187.198 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10491,7 +10491,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 102.616 188.468 0)
+			(at 102.616 187.198 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10500,7 +10500,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 102.616 188.468 0)
+			(at 102.616 187.198 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10796,10 +10796,9 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "7b5d31c5-1ed2-4fce-a89e-47d3f2a5f4b6")
 		(property "Reference" "D2"
-			(at 47.752 100.5839 90)
+			(at 48.26 100.5839 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10807,8 +10806,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "3.3V"
-			(at 47.752 103.1239 90)
+		(property "Value" "Dz 3.3V 0.5W"
+			(at 48.26 103.1239 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11256,7 +11255,7 @@
 	)
 	(symbol
 		(lib_id "Mechanical:MountingHole_Pad")
-		(at 52.578 185.674 0)
+		(at 52.578 184.658 0)
 		(unit 1)
 		(exclude_from_sim yes)
 		(in_bom no)
@@ -11265,7 +11264,7 @@
 		(fields_autoplaced yes)
 		(uuid "944b7202-2a0f-4fab-81d9-58730dc32d8d")
 		(property "Reference" "H2"
-			(at 55.118 183.1339 0)
+			(at 55.118 182.1179 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11274,7 +11273,7 @@
 			)
 		)
 		(property "Value" "MountingHole_Pad"
-			(at 55.118 185.6739 0)
+			(at 55.118 184.6579 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11283,7 +11282,7 @@
 			)
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad_TopBottom"
-			(at 52.578 185.674 0)
+			(at 52.578 184.658 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11292,7 +11291,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 52.578 185.674 0)
+			(at 52.578 184.658 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11301,7 +11300,7 @@
 			)
 		)
 		(property "Description" "Mounting Hole with connection"
-			(at 52.578 185.674 0)
+			(at 52.578 184.658 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11927,15 +11926,15 @@
 		(fields_autoplaced yes)
 		(uuid "b631934f-63b1-46f1-b176-146630650044")
 		(property "Reference" "M1"
-			(at 245.364 85.344 0)
+			(at 245.364 85.09 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "Si5351A module"
-			(at 245.364 87.884 0)
+		(property "Value" "Module Si5351A"
+			(at 245.364 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12983,7 +12982,7 @@
 		(fields_autoplaced yes)
 		(uuid "dcb0776e-cc1a-4d85-ac39-ecd1bbda91fb")
 		(property "Reference" "D3"
-			(at 100.838 101.0919 90)
+			(at 100.33 101.0919 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12991,8 +12990,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "3.3V"
-			(at 100.838 103.6319 90)
+		(property "Value" "Dz 3.3V 0.5W"
+			(at 100.33 103.6319 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13114,7 +13113,7 @@
 	)
 	(symbol
 		(lib_id "Mechanical:MountingHole_Pad")
-		(at 102.616 185.928 0)
+		(at 102.616 184.658 0)
 		(unit 1)
 		(exclude_from_sim yes)
 		(in_bom no)
@@ -13123,7 +13122,7 @@
 		(fields_autoplaced yes)
 		(uuid "df0b79c1-3b3f-45e6-851d-cae344abf6ed")
 		(property "Reference" "H4"
-			(at 105.156 183.3879 0)
+			(at 105.156 182.1179 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13132,7 +13131,7 @@
 			)
 		)
 		(property "Value" "MountingHole_Pad"
-			(at 105.156 185.9279 0)
+			(at 105.156 184.6579 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13141,7 +13140,7 @@
 			)
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad_TopBottom"
-			(at 102.616 185.928 0)
+			(at 102.616 184.658 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13150,7 +13149,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 102.616 185.928 0)
+			(at 102.616 184.658 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13159,7 +13158,7 @@
 			)
 		)
 		(property "Description" "Mounting Hole with connection"
-			(at 102.616 185.928 0)
+			(at 102.616 184.658 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13651,7 +13650,7 @@
 	)
 	(symbol
 		(lib_id "Connector:Conn_01x02_Socket")
-		(at 62.992 98.044 0)
+		(at 67.056 98.044 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -13660,7 +13659,7 @@
 		(fields_autoplaced yes)
 		(uuid "fa779ed0-ac84-45bc-a1e7-512f8bdaf711")
 		(property "Reference" "J9"
-			(at 64.008 98.0439 0)
+			(at 68.072 98.0439 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13669,7 +13668,7 @@
 			)
 		)
 		(property "Value" "IN S_meter"
-			(at 64.008 100.5839 0)
+			(at 68.072 100.5839 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13678,7 +13677,7 @@
 			)
 		)
 		(property "Footprint" "Connector_JST:JST_EH_B2B-EH-A_1x02_P2.50mm_Vertical"
-			(at 62.992 98.044 0)
+			(at 67.056 98.044 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13687,7 +13686,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 62.992 98.044 0)
+			(at 67.056 98.044 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13696,7 +13695,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated"
-			(at 62.992 98.044 0)
+			(at 67.056 98.044 0)
 			(effects
 				(font
 					(size 1.27 1.27)
