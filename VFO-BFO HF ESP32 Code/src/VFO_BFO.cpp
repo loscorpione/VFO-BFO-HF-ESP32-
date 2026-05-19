@@ -44,7 +44,7 @@ void readVFOEncoder() {
 
   if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {
     encoderCount++;
-    if (encoderCount >= 2) {
+    if (encoderCount >= ENCODER_DIVIDER) {
       if (micros() - lastUpdate > UPDATE_INTERVAL) {
         displayedFrequency += step;
         if (displayedFrequency > maxFreq) displayedFrequency = maxFreq;
@@ -62,7 +62,7 @@ void readVFOEncoder() {
   }
   else if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {
     encoderCount++;
-    if (encoderCount >= 2) {
+    if (encoderCount >= ENCODER_DIVIDER) {
       if (micros() - lastUpdate > UPDATE_INTERVAL) {
         displayedFrequency -= step;
         if (displayedFrequency < minFreq) displayedFrequency = minFreq;

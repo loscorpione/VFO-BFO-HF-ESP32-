@@ -126,6 +126,11 @@
 // Debounce per tutti i pulsanti
     const int buttonDebounce = 200;
 
+// Configurazione sensibilità encoder VFO
+#define ENCODER_STEPS_PER_REV 400  // Passi per giro del tuo encoder
+#define ENCODER_DESIRED_STEPS 40   // Passi desiderati per giro
+#define ENCODER_DIVIDER (ENCODER_STEPS_PER_REV / ENCODER_DESIRED_STEPS)
+
 // Variabili globali 
     extern unsigned long vfoFrequency;          // Frequenza VFO + IF
     extern unsigned long displayedFrequency;    // Frequenza visualizzata (VFO + IF) 

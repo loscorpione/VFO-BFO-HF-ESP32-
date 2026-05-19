@@ -27,7 +27,7 @@ void setupSI5351() {
 
   si5351.set_pll(SI5351_PLL_FIXED, SI5351_PLLA);
   si5351.drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);
-  si5351.drive_strength(SI5351_CLK1, SI5351_DRIVE_8MA);
+  si5351.drive_strength(SI5351_CLK1, SI5351_DRIVE_2MA);
   si5351.output_enable(SI5351_CLK0, 1);
   si5351.output_enable(SI5351_CLK1, 0); 
 

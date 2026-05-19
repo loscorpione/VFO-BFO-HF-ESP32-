@@ -192,6 +192,9 @@ void setup() {
   // Inizializza SI5351
   setupSI5351();
 
+  // Forza l'attivazione del BFO in base alla modalità corrente
+  updateBFOForMode();  
+  
   // Disegna layout del display
   drawDisplayLayout(); 
 

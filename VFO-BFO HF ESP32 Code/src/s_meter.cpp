@@ -74,7 +74,7 @@ void updateSMeter() {
   int averageValue = valueTotal / SMOOTHING_WINDOW;
   
   // Converti in valore per 25 segmenti con alta risoluzione
-  int newValue = map(constrain(averageValue, 0, 3000), 0, 3000, 0, S_METER_SEGMENTS);
+  int newValue = map(constrain(averageValue, 0, 2000), 0, 2000, 0, S_METER_SEGMENTS);
   
   // Aggiorna solo se c'è un cambiamento reale
   if (newValue != sMeterValue) {
