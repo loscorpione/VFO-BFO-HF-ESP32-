@@ -4,9 +4,95 @@
 #include "modes.h"
 #include "s_meter.h"
 #include "PLL.h"
+#include "logo80x80.h"   // <-- Includi il logo
 
+TFT_eSPI tft;
+TFT_eSprite freqSprite(&tft);
 
-TFT_eSPI tft; // Definisci l'oggetto TFT_eSPI
+//################################ Disegna SplashScreen #####################################
+void drawSplashScreen() {
+  tft.fillScreen(BACKGROUND_COLOR);
+  
+  const int logoX = 10;
+  const int logoY = 10;
+  
+  tft.setSwapBytes(true);
+  tft.pushImage(logoX, logoY, 80, 80, (uint16_t*)Logo_80x80);
+  
+  tft.setTextColor(TFT_ORANGE, BACKGROUND_COLOR);
+  tft.setTextSize(2);
+  tft.setTextFont(1);
+  String text = "HF RECEIVER V1.1";
+  int textX = logoX + 80 + 15;
+  int textY = logoY + (80 / 2) - 8;
+  tft.drawString(text, textX, textY);
+  
+  tft.setTextColor(TFT_ORANGE, BACKGROUND_COLOR);
+  tft.setTextSize(1);
+  tft.setTextFont(1);
+  String subText = "By IV3LDJ";
+  int textWidth = text.length() * 12;
+  int subTextWidth = subText.length() * 6;
+  int subTextX = textX + (textWidth - subTextWidth);
+  int subTextY = textY + 24;
+
+  tft.drawString(subText, subTextX, subTextY);
+  
+  int lineY = logoY + 80 + 15;
+  tft.drawLine(10, lineY, tft.width() - 10, lineY, TFT_WHITE);
+  
+  tft.setTextColor(TFT_GREEN, BACKGROUND_COLOR);
+  tft.setTextSize(1);
+  tft.drawString("VFO/BFO with ESP32 + SI5351 V1.1", 10, lineY + 10);
+
+    // === DEBUG I2C ===
+  int debugY = lineY + 25;
+  tft.setTextColor(TFT_WHITE, BACKGROUND_COLOR);
+  tft.setTextSize(1);
+  tft.drawString("I2C Devices:", 10, debugY);
+  
+  // Scansiona i dispositivi I2C
+  debugY += 12;
+  byte error, address;
+  int deviceCount = 0;
+  
+  for (address = 1; address < 127; address++) {
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+    
+    if (error == 0) {
+      deviceCount++;
+      String deviceInfo = "  0x" + String(address, HEX);
+      
+      // Aggiungi descrizione per indirizzi noti
+      if (address == 0x20) deviceInfo += " PCF8574A";
+      else if (address == 0x22) deviceInfo += " PCF8574T";
+      else if (address == 0x50) deviceInfo += " EEPROM";
+      else if (address == 0x60) deviceInfo += " SI5351";
+      
+      tft.drawString(deviceInfo, 10, debugY);
+      debugY += 12;
+      
+      // Limita a 6 righe per non uscire dallo schermo
+      if (deviceCount >= 6) break;
+    }
+  }
+  
+  tft.setTextColor(TFT_CYAN, BACKGROUND_COLOR);
+  tft.drawString("Total: " + String(deviceCount) + " devices", 10, debugY);
+  
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_BLUE, BACKGROUND_COLOR);
+  tft.drawString("VFO-BFO Ready", 10, debugY + 15);
+
+  tft.setTextSize(1);
+  tft.setTextColor(TFT_YELLOW, BACKGROUND_COLOR);
+  tft.drawString("For calibration: type HELP on the serial monitor.", 10, debugY + 35 );
+
+  delay(8000);
+  tft.fillScreen(BACKGROUND_COLOR);
+}
+
 
 //################################ Layout Iniziale #####################################
 
@@ -85,8 +171,6 @@ TFT_eSPI tft; // Definisci l'oggetto TFT_eSPI
 }
 
 //################################ Grafica Frequenza #####################################
-// Definisci lo Sprite della frequenza
-TFT_eSprite freqSprite = TFT_eSprite(&tft);  
 
 // Variabili per l'aggiornamento della frequenza
 static String lastFreqStr = "";
@@ -168,17 +252,16 @@ void updateStepDisplay() {
   else if (step == 100) stepStr = "100Hz";
   else if (step == 1000) stepStr = "1kHz";
   else if (step == 10000) stepStr = "10kHz";
+  else stepStr = "ERR";
   
   if (stepStr != lastStepStr) {
     tft.fillRect(STEP_BOX_X+2, STEP_BOX_Y+15, STEP_BOX_WIDTH-4, STEP_BOX_HEIGHT-20, BACKGROUND_COLOR);
     tft.setTextColor(STEP_COLOR, BACKGROUND_COLOR);
     tft.setTextSize(2);
     
-    // Calcola la posizione X centrata
-    int textWidth = stepStr.length() * 12; // Approssimazione: 12 pixel per carattere
+    int textWidth = stepStr.length() * 12;
     int centeredX = STEP_BOX_X + (STEP_BOX_WIDTH - textWidth) / 2;
     
-    // Disegna il testo centrato
     tft.drawString(stepStr, centeredX, STEP_BOX_Y+15);
     lastStepStr = stepStr;
   }

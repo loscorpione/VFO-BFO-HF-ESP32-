@@ -1,6 +1,7 @@
 #ifndef VFO_BFO_H
 #define VFO_BFO_H
 
+
 // Funzioni encoder VFO
 void setupEncoders();
 void readVFOEncoder();

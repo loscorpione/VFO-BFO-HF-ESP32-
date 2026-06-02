@@ -23,6 +23,8 @@ unsigned long step = 1000;
 unsigned long minFreq = 1000000;
 unsigned long maxFreq = 30000000;
 
+int stepMode = 0;  // 0=normale, 1=moltiplicatore
+
 // Variabili per debounce
 unsigned long lastEncoderRead = 0;
 const int encoderReadInterval = 10;
@@ -103,7 +105,8 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
-/*   //**********************************************************
+
+  //**********************************************************
   // // === DIAGNOSTICA I2C ===
   Serial.println("\n=== DIAGNOSTICA I2C ===");
   Wire.begin(I2C_SDA, I2C_SCL);
@@ -126,8 +129,9 @@ void setup() {
       
       // Identifica i dispositivi
       if (address == 0x60) Serial.println(" -> SI5351");
-      else if (address == 0x20) Serial.println(" -> PCF8574A");
+      else if (address == 0x20) Serial.println(" -> PCF8574A (Expander I/O)");
       else if (address == 0x50) Serial.println(" -> EEPROM 24LC32");
+      else if (address == 0x22) Serial.println(" -> PCF8574T (Tastiera matrix)");
       else Serial.println(" -> Sconosciuto");
       
       nDevices++;
@@ -141,16 +145,13 @@ void setup() {
     Serial.println(nDevices);
   }
   Serial.println("=== FINE DIAGNOSTICA ===\n");
-  //********************************************************** */
+  //**********************************************************
 
   // Configurazione encoder VFO con pull-up interni 
-  pinMode(VFO_ENC_CLK, INPUT_PULLUP);
-  pinMode(VFO_ENC_DT, INPUT_PULLUP);
+  pinMode(VFO_ENC_CLK, INPUT);
+  pinMode(VFO_ENC_DT, INPUT);
   pinMode(SW_STEP, INPUT_PULLUP);
 
-  // Configurazione I2C con pull-up interni 
-  // pinMode(I2C_SDA, INPUT_PULLUP);
-  // pinMode(I2C_SCL, INPUT_PULLUP);
 
   // Configura encoder pitch BFO con pull-up interni 
   pinMode(BFO_ENC_CLK, INPUT_PULLUP);
@@ -171,6 +172,11 @@ void setup() {
   tft.init();
   tft.setRotation(1);
   tft.fillScreen(BACKGROUND_COLOR);
+
+
+  // === MOSTRA LA SCRHERMATA INIZIALE ===
+  drawSplashScreen(); 
+ 
 
   // Inizializza EEPROM e carica configurazione
   eepromManager.begin();
@@ -213,6 +219,7 @@ void setup() {
 }
 
 void loop() {
+
   readVFOEncoder();
 
   // Gestione Pitch BFO

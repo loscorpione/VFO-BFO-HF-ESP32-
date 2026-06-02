@@ -74,6 +74,7 @@ void updateSMeter() {
   int averageValue = valueTotal / SMOOTHING_WINDOW;
   
   // Converti in valore per 25 segmenti con alta risoluzione
+  // aumentare o diminuire il range di 2000 a seconda della potenza massima attesa per migliorare la sensibilità
   int newValue = map(constrain(averageValue, 0, 2000), 0, 2000, 0, S_METER_SEGMENTS);
   
   // Aggiorna solo se c'è un cambiamento reale

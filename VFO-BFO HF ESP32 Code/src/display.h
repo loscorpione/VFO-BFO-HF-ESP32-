@@ -12,5 +12,6 @@ void updateStepDisplay();
 void drawBFODisplay();
 String formatFrequency(unsigned long freq);
 void setupFrequencySprite();    // Nuova funzione per inizializzare Sprite
+void drawSplashScreen();
 
 #endif
