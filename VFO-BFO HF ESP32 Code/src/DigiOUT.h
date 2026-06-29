@@ -4,11 +4,18 @@
 #include <Wire.h>
 #include "functions.h"
 
-// Dichiarazione delle variabili globali necessarie
+// ============================================
+// VARIABILI ESTERNE
+// ============================================
+
 extern unsigned long displayedFrequency;
 extern int currentMode;
 extern bool agcFastMode;
 extern bool attenuatorEnabled;
+
+// ============================================
+// FUNZIONI
+// ============================================
 
 void setupDigiOUT();
 void updateModeOutputs();

@@ -4,17 +4,27 @@
 #include "functions.h"
 #include "bands.h"
 
-// Dichiarazioni esterne delle variabili globali
+// ============================================
+// VARIABILI ESTERNE
+// ============================================
+
 extern unsigned long displayedFrequency;
 extern int currentMode;
 extern unsigned long step;
 extern bool agcFastMode;
 extern bool attenuatorEnabled;
 
+// ============================================
+// ISTANZA GLOBALE
+// ============================================
+
 EEPROMManager eepromManager;
 
+// ============================================
+// FUNZIONI DI BASE
+// ============================================
+
 void EEPROMManager::begin() {
-    
     Wire.setClock(100000);
     Wire.setTimeout(1000);
     delay(100);
@@ -22,14 +32,22 @@ void EEPROMManager::begin() {
 
 bool EEPROMManager::write(uint16_t address, const uint8_t* data, uint16_t len) {
     if (address + len > EEPROM_SIZE) {
+        Serial.println("❌ write: indirizzo fuori range");
         return false;
     }
+
+    /* DEBUG
+    Serial.print("✍️ write: addr=");
+    Serial.print(address);
+    Serial.print(" len=");
+    Serial.println(len); */
     
     uint16_t bytesWritten = 0;
     
     while (bytesWritten < len) {
         uint16_t pageBoundary = (address + bytesWritten + 32) & 0xFFE0;
-        uint16_t bytesInThisPage = min((uint16_t)(pageBoundary - (address + bytesWritten)), (uint16_t)(len - bytesWritten));
+        uint16_t bytesInThisPage = min((uint16_t)(pageBoundary - (address + bytesWritten)), 
+                                        (uint16_t)(len - bytesWritten));
         bytesInThisPage = min(bytesInThisPage, (uint16_t)32);
         
         Wire.beginTransmission(EXTERNAL_EEPROM_ADDRESS);
@@ -90,6 +108,10 @@ bool EEPROMManager::read(uint16_t address, uint8_t* data, uint16_t len) {
     return true;
 }
 
+// ============================================
+// CHECKSUM
+// ============================================
+
 uint8_t EEPROMManager::calculateChecksum(const uint8_t* data, size_t len) {
     uint8_t checksum = 0;
     for (size_t i = 0; i < len; i++) {
@@ -102,8 +124,11 @@ bool EEPROMManager::verifyChecksum(const uint8_t* data, size_t len, uint8_t chec
     return calculateChecksum(data, len) == checksum;
 }
 
+// ============================================
+// SALVATAGGIO / CARICAMENTO CONFIG
+// ============================================
+
 bool EEPROMManager::loadConfig(RXConfig& config) {
-    // Leggi la configurazione a blocchi
     const int BLOCK_SIZE = 64;
     
     uint8_t* configBytes = (uint8_t*)&config;
@@ -121,7 +146,6 @@ bool EEPROMManager::loadConfig(RXConfig& config) {
         bytesRead += bytesToRead;
     }
     
-    // Verifica checksum
     uint8_t stored_checksum = config.checksum;
     config.checksum = 0;
     uint8_t calculated_checksum = calculateChecksum((uint8_t*)&config, sizeof(RXConfig) - 1);
@@ -142,6 +166,9 @@ bool EEPROMManager::saveConfig(const RXConfig& config) {
     return write(EEPROM_CONFIG_START, (uint8_t*)&configToSave, sizeof(RXConfig));
 }
 
+// ============================================
+// MEMORIZZAZIONI
+// ============================================
 
 bool EEPROMManager::saveMemory(uint8_t slot, const MemoryChannel& memory) {
     if (slot >= 10) {
@@ -175,7 +202,9 @@ bool EEPROMManager::formatEEPROM() {
     return true;
 }
 
-// ==================== FUNZIONI PER SALVATAGGIO RITARDATO ====================
+// ============================================
+// SALVATAGGIO RITARDATO
+// ============================================
 
 void EEPROMManager::requestSave() {
     lastSaveRequest = millis();
@@ -212,7 +241,9 @@ bool EEPROMManager::isSavePending() {
     return savePending;
 }
 
-// ==================== GESTIONE CONFIGURAZIONE RX ====================
+// ============================================
+// GESTIONE STATO RX
+// ============================================
 
 bool EEPROMManager::loadRXState() {
     if (loadConfig(currentConfig)) {
@@ -267,23 +298,51 @@ RXConfig& EEPROMManager::getCurrentRXConfig() {
     return currentConfig;
 }
 
-// ==================== FUNZIONI DI CALIBRAZIONE SI5351 ====================
+// ============================================
+// CALIBRAZIONE SI5351
+// ============================================
 
 bool EEPROMManager::saveCalibration(long calibration_factor) {
     uint32_t timestamp = millis();
     uint8_t data[12];
     
     memcpy(data, &calibration_factor, 4);
-    memset(data + 4, 0, 4); // Riservato per futuro uso
+    memset(data + 4, 0, 4);
     memcpy(data + 8, &timestamp, 4);
     
-    bool success = write(EEPROM_CALIBRATION, data, 12);
+    // // DEBUG: stampa i dati prima di scrivere
+    // Serial.print("Salvataggio calibrazione: ");
+    // Serial.print(calibration_factor);
+    // Serial.print(" su indirizzo ");
+    // Serial.println(EEPROM_CALIBRATION);
     
-    if (success) {
-        Serial.print("Calibrazione salvata: ");
-        Serial.println(calibration_factor);
-    } else {
-        Serial.println("Errore salvataggio calibrazione");
+    // for (int i = 0; i < 12; i++) {
+    //     Serial.print("0x");
+    //     if (data[i] < 16) Serial.print("0");
+    //     Serial.print(data[i], HEX);
+    //     Serial.print(" ");
+    // }
+    // Serial.println();
+    
+    bool success = write(EEPROM_CALIBRATION, data, 12);
+
+        // ATTENDI CHE LA SCRITTURA SIA COMPLETATA
+    delay(50);
+    
+    // VERIFICA LEGGENDO CIÒ CHE È STATO SCRITTO
+    uint8_t verify[12];
+    if (read(EEPROM_CALIBRATION, verify, 12)) {
+        long writtenValue;
+        memcpy(&writtenValue, verify, 4);
+        if (writtenValue == calibration_factor) {
+            Serial.print("✅ Verifica OK: ");
+            Serial.println(writtenValue);
+        } else {
+            Serial.print("⚠️ Verifica fallita: scritto ");
+            Serial.print(calibration_factor);
+            Serial.print(", letto ");
+            Serial.println(writtenValue);
+        }
     }
     
     return success;
@@ -292,10 +351,23 @@ bool EEPROMManager::saveCalibration(long calibration_factor) {
 bool EEPROMManager::loadCalibration(long& calibration_factor) {
     uint8_t data[12];
     
+    Serial.print("Caricamento calibrazione da indirizzo ");
+    Serial.println(EEPROM_CALIBRATION);
+    
     if (!read(EEPROM_CALIBRATION, data, 12)) {
-        Serial.println("Nessuna calibrazione trovata in EEPROM");
+        Serial.println("❌ Lettura EEPROM fallita");
         return false;
     }
+    
+    // DEBUG: stampa i dati letti
+    Serial.print("Dati letti: ");
+    for (int i = 0; i < 12; i++) {
+        Serial.print("0x");
+        if (data[i] < 16) Serial.print("0");
+        Serial.print(data[i], HEX);
+        Serial.print(" ");
+    }
+    Serial.println();
     
     memcpy(&calibration_factor, data, 4);
     uint32_t timestamp;

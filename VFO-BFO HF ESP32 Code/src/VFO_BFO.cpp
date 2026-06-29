@@ -10,15 +10,6 @@
 #include <Arduino.h>
 
 // ============================================
-// VARIABILI GLOBALI ESTERNE
-// ============================================
-extern unsigned long lastEncoderRead;
-extern int lastEncoded;
-extern int encoderCount;
-extern bool buttonPressed;
-extern unsigned long lastButtonPress;
-
-// ============================================
 // ENCODER VFO (PCNT hardware)
 // ============================================
 ESP32Encoder vfoEncoder;
@@ -28,7 +19,7 @@ static int lastPitchEncoded = 0;
 static int pitchEncoderCount = 0;
 
 // ============================================
-// INIZIALIZZAZIONE ENCODER VFO (adattiva)
+// INIZIALIZZAZIONE ENCODER VFO
 // ============================================
 void setupEncoders() {
     // Configura i pin come input (pull-up già presenti esternamente)
@@ -40,7 +31,6 @@ void setupEncoders() {
     
     // Azzera il contatore
     vfoEncoder.clearCount();
-    
 }
 
 // ============================================
@@ -61,7 +51,6 @@ void readVFOEncoder() {
             delta = delta / ENCODER_SENSITIVITY_DIVIDER;
             
             if (delta == 0) {
-                // Nessun impulso completo, ma salva la posizione
                 lastCount = currentCount;
                 return;
             }
@@ -97,7 +86,9 @@ void changeStep() {
         default: step = 10;
     }
     
-    Serial.print("Step: ");
+    // Debug
+    // Serial.print("Step: ");  
+
     if (step == 10) Serial.println("10Hz");
     else if (step == 100) Serial.println("100Hz");
     else if (step == 1000) Serial.println("1kHz");
@@ -105,15 +96,14 @@ void changeStep() {
 }
 
 // ============================================
-// ENCODER BFO (MECCANICO) - invariato
+// ENCODER BFO (MECCANICO)
 // ============================================
 int readBFOEncoder() {
     static unsigned long lastDebounceTime = 0;
     static int lastStableState = 0;
-    static int lastEncodedLocal = 0;
     
-    // Debounce per encoder meccanico (5ms)
-    if (millis() - lastDebounceTime < 5) {
+    // Debounce per encoder meccanico
+    if (millis() - lastDebounceTime < ENCODER_BFO_DEBOUNCE_MS) {
         return 0;
     }
     
@@ -132,14 +122,14 @@ int readBFOEncoder() {
 
     if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {
         pitchEncoderCount++;
-        if (pitchEncoderCount >= 2) {
+        if (pitchEncoderCount >= ENCODER_DIVIDER_BFO) {
             direction = 1;
             pitchEncoderCount = 0;
         }
     }
     else if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {
         pitchEncoderCount++;
-        if (pitchEncoderCount >= 2) {
+        if (pitchEncoderCount >= ENCODER_DIVIDER_BFO) {
             direction = -1;
             pitchEncoderCount = 0;
         }

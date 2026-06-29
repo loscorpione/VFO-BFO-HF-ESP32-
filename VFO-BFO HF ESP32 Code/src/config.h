@@ -1,6 +1,30 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <Arduino.h>
+
+    // ============================================
+    // VERSIONI PROGETTO
+    // ============================================
+
+        #define SW_VERSION "V2.0"
+        #define HW_VERSION "V1.1"
+        #define VERSION_DATE "Giugno 2026"
+
+        #define AUTHOR "Scorpione Maker (IV3LDJ)"
+        #define GITHUB_URL "https://github.com/loscorpione/VFO-BFO-HF-ESP32-Si5351"
+        #define YOUTUBE_URL "https://youtube.com/@ScorpioneMaker"
+
+        /*
+        *  Descrizione  :
+        *    Generatore VFO/BFO per ricevitori HF (1-30 MHz) basato su ESP32 e SI5351.
+        *    Supporta encoder ottico/meccanico, display TFT, calibrazione automatica via serial monitor, 
+        *    funzioni AGC Fast/Slow, attenuatore -20dB, pitch BFO regolabile, visualizzazione S-meter, 
+        *    gestione bande e modalità, salvataggio configurazioni su EEPROM esterna.
+        *  
+        *  Licenza    : MIT
+        */
+
     // ============================================
     // CONFIGURAZIONE ENCODER VFO
     // ============================================
@@ -27,14 +51,14 @@
 
         #else
             // Encoder Meccanico 30PPR
-            #define ENCODER_PPR 30
+            #define ENCODER_PPR 24
             #define ENCODER_ATTACH_MODE attachFullQuad     // 120 conteggi/giro × 10Hz = 1200 Hz/giro
             
         #endif
 
         // Sensibilità encoder VFO
         // Riduce la sensibilità: 1 = originale, 2 = metà, 4 = un quarto
-        #define ENCODER_SENSITIVITY_DIVIDER 2
+        #define ENCODER_SENSITIVITY_DIVIDER 4
 
         
         // CONFIGURAZIONE STEP VFO
@@ -47,8 +71,11 @@
     // CONFIGURAZIONE ENCODER BFO
     // ============================================
 
-        #define BFO_ENC_CLK 12                  // Pin CLK dell'encoder BFO
-        #define BFO_ENC_DT  13                  // Pin DT dell'encoder BFO
+        #define BFO_ENC_CLK 12               // Pin CLK dell'encoder BFO
+        #define BFO_ENC_DT  13               // Pin DT dell'encoder BFO
+        #define ENCODER_BFO_DEBOUNCE_MS 4   // Debounce in millisecondi
+        #define ENCODER_DIVIDER_BFO     4    // Impulsi necessari per un passo
+        
 
     // ============================================
     // CONFIGURAZIONE PULSANTI
@@ -66,12 +93,25 @@
         const int buttonDebounce = 200;
 
     // ============================================
+    // CONFIGURAZIONE TASTIERA MATRICE 4x4 (I2CKeyPad)
+    // ============================================
+
+        // Indirizzo I2C del modulo PCF8574T
+        #define KEYPAD_I2C_ADDR 0x22
+
+        // Debounce in millisecondi
+        #define KEYPAD_DEBOUNCE_MS 50   
+
+        // Timeout in millisecondi
+        #define FREQ_INPUT_TIMEOUT 5000   // Timeout in millisecondi
+
+    // ============================================
     // CONFIGURAZIONE INPUT/OUTPUT VARI
     // ============================================
 
         // Configurazione GPIO Ingresso S-Meter 
         #define S_METER_PIN 15              // Pin analogico per il S-meter
-        
+            
         // Configurazione GPIO Ingresso RTTY_CW 
         #define RTTY_CW_PIN 4               // Pin digitale per RTTY_CW (futuro)
 
@@ -108,6 +148,11 @@
         //#define EEPROM_SIZE 16384         // 24LC128 = 128Kbit = 16KB
         #define EEPROM_SIZE 32768           // 24LC256 = 256Kbit = 32KB
 
+        // Mappa indirizzi di partenza per diverse tipologie di dati
+        #define EEPROM_CONFIG_START     0     // Configurazione principale
+        #define EEPROM_CALIBRATION      260    // Dati calibrazione
+        #define EEPROM_MEMORIES_START   512  // Memorizzazioni
+
         // Timing salvataggio
         #define EEPROM_SAVE_DELAY 3000      // Salva dopo 3 secondi di inattività
         #define EEPROM_QUICK_SAVE_DELAY 500 // Salvataggio rapido per cambi importanti
@@ -132,6 +177,9 @@
     // ============================================
     // CONFIGURAZIONE DISPLAY
     // ============================================
+
+        // Durata schermata iniziale
+        #define Time_SPLASH_SCREEN 4000     // 5 secondi
     
         // Display VFO
         #define VFO_DISPLAY_X 15            // Posizione X del display VFO
@@ -152,15 +200,7 @@
         #define BFO_CENTER_MARKER_HEIGHT 12 // Altezza marcatore centrale
         #define BFO_LABEL_COLOR TFT_SKYBLUE // Colore etichetta BFO
 
-        // Display STEP
-        #define STEP_BOX_X 250
-        #define STEP_BOX_Y 102
-        #define STEP_BOX_WIDTH 70
-        #define STEP_BOX_HEIGHT 40
-        #define STEP_BOX_TEXT_COLOR TFT_RED
-        #define STEP_BOX_TEXT_SIZE 1
-
-        // S-Meter - Pin e configurazione 
+        // S-Meter - dimensioni e posizioni 
         #define S_METER_X 15                // Posizione X
         #define S_METER_Y 160               // Posizione Y
         #define S_METER_WIDTH 300           // Larghezza totale
@@ -168,12 +208,20 @@
         #define S_METER_SEGMENTS 25         // Numero di segmenti
         #define S_METER_SEGMENT_WIDTH 12    // Larghezza di ogni segmento
 
-        // Colori S-meter
+        // S-meter - colori
         #define S_METER_LOW_COLOR TFT_GREEN
         #define S_METER_HIGH_COLOR TFT_RED
         #define S_METER_BG_COLOR TFT_DARKGREY
 
-        // Posizione riquadri (banda, modalità, AGC, ATT) 
+        // Riquadro Step - dimensioni e posizioni 
+        #define STEP_BOX_X 250
+        #define STEP_BOX_Y 102
+        #define STEP_BOX_WIDTH 70
+        #define STEP_BOX_HEIGHT 40
+        #define STEP_BOX_TEXT_COLOR TFT_RED
+        #define STEP_BOX_TEXT_SIZE 1
+
+        // Riquadri banda, modalità, AGC, ATT - dimensioni e posizioni 
         #define POSITION_X 10              // Posizione X
         #define POSITION_Y 200            // Posizione Y
         #define BOX_NUM 4                 // Numero di riquadri

@@ -1,6 +1,9 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
+// ============================================
+// VARIABILI ESTERNE
+// ============================================
 
 // Stati AGC e ATT
 extern bool agcFastMode;
@@ -12,17 +15,26 @@ extern bool ATTButtonPressed;
 extern unsigned long lastAGCButtonPress;
 extern unsigned long lastATTButtonPress;
 
-// Funzioni AGC
+// ============================================
+// FUNZIONI AGC
+// ============================================
+
 void changeAGC();
 void updateAGC();
 void updateAGCDisplay();
 
-// Funzioni ATT
+// ============================================
+// FUNZIONI ATT
+// ============================================
+
 void changeATT();
 void updateATT();
 void updateATTDisplay();
 
-// Funzioni di gestione (per il main loop)
+// ============================================
+// FUNZIONI DI GESTIONE (MAIN LOOP)
+// ============================================
+
 void checkAGCButton();
 void checkATTButton();
 

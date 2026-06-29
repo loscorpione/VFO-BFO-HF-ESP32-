@@ -3,15 +3,33 @@
 
 #include <TFT_eSPI.h>
 
+// ============================================
+// VARIABILI ESTERNE
+// ============================================
+
 extern TFT_eSPI tft;
-extern TFT_eSprite freqSprite;  // Aggiungi Sprite per la frequenza
+extern TFT_eSprite freqSprite;
+
+// ============================================
+// FUNZIONI
+// ============================================
 
 void drawDisplayLayout();
 void updateFrequencyDisplay();
 void updateStepDisplay();
 void drawBFODisplay();
 String formatFrequency(unsigned long freq);
-void setupFrequencySprite();    // Nuova funzione per inizializzare Sprite
+void setupFrequencySprite();
 void drawSplashScreen();
+
+// ============================================
+// FUNZIONI PER INSERIMENTO FREQUENZA DA TASTIERA
+// ============================================
+
+void showFrequencyInputMode(bool active);
+void updateFrequencyInputDisplay(String input);
+void showInputConfirm();
+void showInputError();
+void hideInputMode();
 
 #endif
